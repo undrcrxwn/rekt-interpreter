@@ -1,9 +1,8 @@
 ﻿#pragma once
+#include "bindings.h"
 
 namespace stx
 {
-	struct Bindings;
-
 	class Element
 	{
 	public:

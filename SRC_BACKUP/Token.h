@@ -3,7 +3,6 @@
 #include "bindings.h"
 #include <string>
 #include <cmath>
-#include <algorithm>
 
 namespace stx
 {
@@ -22,7 +21,7 @@ namespace stx
         };
 
         Type type;
-        //? todo: error info
+        //? todo: error;
         std::string content;
 
         Token(Type t = Type::Unknown, const std::string& c = "") : type(t), content(c) {}
@@ -41,33 +40,11 @@ namespace stx
             }
 
             // operator
-            if (b.operators.find(content) != b.operators.end())
+            bool found = std::find_if(b.operators.begin(), b.operators.end(), [&](const Operator& o)
+                { return o.key == content; }) != b.operators.end();
+            if (found)
             {
                 type = Token::Type::Operator;
-                return;
-            }
-
-            // variable
-            if (content[0] == '$' && content.size() > 1)
-            {
-                type = Token::Type::Variable;
-                return;
-            }
-
-            // macro
-            if (b.macros.find(content) != b.macros.end())
-            {
-                type = Token::Type::Macro;
-                return;
-            }
-
-            // special string cases
-            std::string lowercase(content);
-            std::transform(content.begin(), content.end(), lowercase.begin(),
-                [](char c) { return std::tolower(c); });
-            if(lowercase == "inf" || lowercase == "nan")
-            {
-                type = Token::Type::String;
                 return;
             }
 
@@ -76,8 +53,8 @@ namespace stx
             double result = strtod(content.c_str(), &p);
             if (std::isinf(result))
             {
-                //? todo: throw error (limit exceeded)
                 type = Token::Type::Null;
+                //? todo: throw error (limit exceeded)
                 return;
             }
 
@@ -88,9 +65,28 @@ namespace stx
             }
 
             // function
-            if (b.functions.find(content) != b.functions.end())
+            found = std::find_if(b.functions.begin(), b.functions.end(), [&](const Function& f)
+                { return f.key == content; }) != b.functions.end();
+            if (found)
             {
                 type = Token::Type::Function;
+                return;
+            }
+
+            // variable
+            if (content[0] == '$' &&
+                std::count(content.begin(), content.end(), '$') == 1)
+            {
+                type = Token::Type::Variable;
+                return;
+            }
+
+            // macro
+            found = std::find_if(b.macros.begin(), b.macros.end(), [&](const Macro& m)
+                { return m.key == content; }) != b.macros.end();
+            if (found)
+            {
+                type = Token::Type::Macro;
                 return;
             }
 

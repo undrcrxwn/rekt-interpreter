@@ -139,10 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Operator.cpp" />
+    <ClCompile Include="src\Bindings.cpp" />
     <ClCompile Include="src\Pack.cpp" />
     <ClCompile Include="src\Element.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Pack.h" />
@@ -150,7 +151,8 @@
     <None Include="src\Token.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Operator.h" />
+    <ClInclude Include="src\Parser.h" />
+    <ClInclude Include="src\Bindings.h" />
     <ClInclude Include="src\Token.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>

@@ -13,16 +13,38 @@ namespace stx
 
     std::string Pack::ToString() const
     {
+        //? todo: Normalize();
+        //?       return content;
         return "";
     }
 
     void Pack::Chop(const Bindings& b)
     {
-        PackByOperators({ "for" });
-        PackByOperators({ "^" });
-        PackByOperators({ "*", "/" });
-        PackByOperators({ "+", "-" });
-        PackByOperators({ "==", ">", "<", ">=", "<=" });
+        // for
+        PackByOperators(b,
+            { Operator::Type::For });
+
+        // ^
+        PackByOperators(b,
+            { Operator::Type::Power });
+
+        // * /
+        PackByOperators(b,
+            { Operator::Type::Multiply,
+              Operator::Type::Divide });
+
+        // + -
+        PackByOperators(b,
+            { Operator::Type::Add,
+              Operator::Type::Subtract });
+
+        // == > < >= <=
+        PackByOperators(b,
+            { Operator::Type::Equal,
+              Operator::Type::Greater,
+              Operator::Type::Less,
+              Operator::Type::GreaterOrEqual,
+              Operator::Type::LessOrEqual });
     }
 
     void Pack::Resolve()
@@ -81,7 +103,7 @@ namespace stx
         return std::make_pair(&os, tab);
     }
 
-    void Pack::PackByOperators(const std::vector<std::string>& ots)
+    void Pack::PackByOperators(const Bindings& b, std::vector<Operator::Type> ots)
     {
         for (size_t i = 0; i < size(); i++)
         {
@@ -94,14 +116,18 @@ namespace stx
 
                 if (i == 0 || i == size() - 1)
                 {
-                    //? todo: throw unsupported signature
+                    //? todo: t -> set error: unsupported signature
                     continue;
                 }
 
                 std::shared_ptr<Element> l = (*this)[i - 1];
                 std::shared_ptr<Element> r = (*this)[i + 1];
 
-                if (std::find(ots.begin(), ots.end(), t->content) == ots.end())
+                Operator::Type myOt = std::find_if(b.operators.begin(), b.operators.end(), [&](const Operator& o)
+                    { return o.key == t->content; })->type;
+                bool found = std::find_if(ots.begin(), ots.end(), [&](const Operator::Type& ot)
+                    { return ot == myOt; }) != ots.end();
+                if (!found)
                     continue;
 
                 Pack* p = new Pack;
@@ -115,7 +141,7 @@ namespace stx
             else if (type == Element::Type::Pack)
             {
                 Pack* p = (Pack*)(*this)[i].get();
-                p->PackByOperators(ots);
+                p->PackByOperators(b, ots);
             }
         }
     }

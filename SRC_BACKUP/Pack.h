@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Element.h"
+#include "bindings.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -7,8 +8,6 @@
 
 namespace stx
 {
-    struct Bindings;
-
     class Pack : public Element, public std::vector<std::shared_ptr<Element>>
     {
     public:
@@ -30,13 +29,13 @@ namespace stx
         }
 
         // Pack by operators in order of priority.
-        void Chop(const Bindings& b);
-        void Resolve();
+        void Chop(const Bindings& b); //* transfer
+        void Resolve(); //* transfer
         // Invoke operator's processor.
-        void Process();
+        void Process(); //* ?
 
     private:
         std::pair<std::ostream*, size_t> Print(std::ostream& os, size_t tab) const;
-        void PackByOperators(const std::vector<std::string>& ots);
+        void PackByOperators(const Bindings& b, std::vector<Operator::Type> ots);
     };
 }
