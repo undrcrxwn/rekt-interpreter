@@ -27,20 +27,20 @@ namespace stx
         }
 
         const OptMap operators = {
-            { "^",   impl::Power},
-            { "*",   impl::Multiply },
-            { "/",   impl::Divide },
-            { "%",   impl::Modulo },
-            { "+",   impl::Add },
-            { "-",   impl::Subtract },
-            { "for", impl::For },
-            { "==",  impl::Equal },
-            { "!=",  impl::NotEqual },
-            { ">",   impl::Greater },
-            { "<",   impl::Less },
-            { ">=",  impl::GreaterOrEqual },
-            { "<=",  impl::LessOrEqual },
-            { "=",   impl::Assign }
+            { "for", { impl::For,            0 } },                                             
+            { "^",   { impl::Power,          1 } },            
+            { "*",   { impl::Multiply,       2 } },
+            { "/",   { impl::Divide,         2 } },
+            { "%",   { impl::Modulo,         2 } },
+            { "+",   { impl::Add,            3 } },
+            { "-",   { impl::Subtract,       3 } },
+            { "==",  { impl::Equal,          4 } },
+            { "!=",  { impl::NotEqual,       4 } },
+            { ">",   { impl::Greater,        4 } },
+            { "<",   { impl::Less,           4 } },
+            { ">=",  { impl::GreaterOrEqual, 4 } },
+            { "<=",  { impl::LessOrEqual,    4 } },                                
+            { "=",   { impl::Assign,         5 } }
         };
 
         const MacroMap macros = {
@@ -75,7 +75,7 @@ namespace stx
         result.Print() << "\n\n";
 
         std::cout << "CHOP\n\n";
-        result.Chop(bindings);
+        result.Chop(bindings.operators);
         result.Print() << "\n\n";
 
         std::cout << "PROCESS\n\n";

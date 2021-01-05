@@ -16,13 +16,13 @@ namespace stx
         return "";
     }
 
-    void Pack::Chop(const Bindings& b)
+    void Pack::Chop(const OptMap& ots)
     {
-        PackByOperators({ "for" });
-        PackByOperators({ "^" });
-        PackByOperators({ "*", "/" });
-        PackByOperators({ "+", "-" });
-        PackByOperators({ "==", ">", "<", ">=", "<=" });
+        std::map<unsigned char, std::vector<std::string>> groups;
+        for (auto& o : ots)
+            groups[o.second.second].push_back(o.first);
+        for (auto& group : groups)
+            PackByOperators(group.second);
     }
 
     void Pack::Resolve()

@@ -3,7 +3,7 @@
 
 int main()
 {
-    std::string input = R"(\(\) hello \+   \ 0\  there NaN (1 2 (()) NULL (0 (1 (2 (3) 2) 1) 0) ) "1 2  3\"" fd for PI + 2)";
+    std::string input = R"(\(\) hello $ $world \+   \ 0\  NaN (1 2 (()) NULL (0 (1 (2 (3) 2) 1 (2) 1) 0) ) "1 2  3\"" fd + 2 for PI ^ 1)";
     std::cout << "RAW INPUT\n" << input << "\n\n\n";
 
     stx::Parser parser;
