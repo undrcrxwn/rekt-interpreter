@@ -1,2 +1,2 @@
 # Rekt Interpreter
-Rekt syntax parser.
+Rekt syntax parser & interpreter.
