@@ -7,112 +7,90 @@
 
 namespace stx
 {
-    class Token : public Element
+    class Token : public Element, std::enable_shared_from_this<Token>
     {
     public:
         enum class Type {
-            Unknown,
-            Function,
-            Number,
             Null,
+            Operator,
             Variable,
             Macro,
-            String,
-            Operator
+            Number,
+            Function,
+            String
         };
 
-        Type type;
         //? todo: error info
         std::string content;
 
-        Token(Type t = Type::Unknown, const std::string& c = "") : type(t), content(c) {}
-        Element::Type GetType() const override { return Element::Type::Token; }
+        Element::Type GetElementType() const override { return Element::Type::Token; }
+        virtual Token::Type GetTokenType() const = 0;
 
-        void Expound(const Bindings& b) override
-        {
-            if (type != Token::Type::Unknown)
-                return;
+        virtual void Normalize() {}
+        virtual std::shared_ptr<Element> Resolve() { return shared_from_this(); }
 
-            // null
-            if (content == "" || content == "NULL")
-            {
-                type = Token::Type::Null;
-                return;
-            }
+    protected:
+        Token(const std::string& c) : content(c) {}
+    };
 
-            // operator
-            if (b.operators.find(content) != b.operators.end())
-            {
-                type = Token::Type::Operator;
-                return;
-            }
+    class NullToken : public Token
+    {
+    public:
+        NullToken() : Token("") {}
+        Token::Type GetTokenType() const override { return Token::Type::Null; };
+    };
 
-            // variable
-            if (content[0] == '$' && content.size() > 1)
-            {
-                type = Token::Type::Variable;
-                return;
-            }
+    class OperatorToken : public Token
+    {
+    public:
+        OperatorToken(const std::string& c, OptSignature* f) : Token(c), processor(f) {}
+        Token::Type GetTokenType() const override { return Token::Type::Operator; };
 
-            // macro
-            if (b.macros.find(content) != b.macros.end())
-            {
-                type = Token::Type::Macro;
-                return;
-            }
+    protected:
+        OptSignature* processor;
+    };
 
-            // special string cases
-            std::string lowercase(content);
-            std::transform(content.begin(), content.end(), lowercase.begin(),
-                [](char c) { return std::tolower(c); });
-            if(lowercase == "inf" || lowercase == "nan")
-            {
-                type = Token::Type::String;
-                return;
-            }
+    class VariableToken : public Token
+    {
+    public:
+        VariableToken(const std::string& c, std::shared_ptr<Token> t) : Token(c), original(t) {}
+        Token::Type GetTokenType() const override { return Token::Type::Variable; };
 
-            // number
-            char* p;
-            double result = strtod(content.c_str(), &p);
-            if (std::isinf(result))
-            {
-                //? todo: throw error (limit exceeded)
-                type = Token::Type::Null;
-                return;
-            }
+    protected:
+        std::shared_ptr<Token> original;
+    };
 
-            if (!*p)
-            {
-                type = Token::Type::Number;
-                return;
-            }
+    class MacroToken : public Token
+    {
+    public:
+        MacroToken(const std::string& c, std::function<std::shared_ptr<Token>()>* f) : Token(c), resolver(f) {}
+        Token::Type GetTokenType() const override { return Token::Type::Macro; };
 
-            // function
-            if (b.functions.find(content) != b.functions.end())
-            {
-                type = Token::Type::Function;
-                return;
-            }
+    protected:
+        std::function<std::shared_ptr<Token>()>* resolver;
+    };
 
-            // string
-            type = Token::Type::String;
-        }
+    class NumberToken : public Token
+    {
+    public:
+        NumberToken(const std::string& c) : Token(c) {}
+        Token::Type GetTokenType() const override { return Token::Type::Number; };
+    };
+    
+    class FunctionToken : public Token
+    {
+    public:
+        FunctionToken(const std::string& c, std::function<void(Pack&)>* f) : Token(c), processor(f) {}
+        Token::Type GetTokenType() const override { return Token::Type::Function; };
 
-        void Normalize() override
-        {
-            switch (type)
-            {
-            case Type::String:
-                for (size_t i = 0; i < content.size(); i++)
-                {
-                    if (content[i] == '\\')
-                        content.erase(content.begin() + i);
-                }
-                break;
-            }
-        }
+    protected:
+        std::function<void(Pack&)>* processor;
+    };
 
-        // Resolve var and macro contents.
-        void Resolve();
+    class StringToken : public Token
+    {
+    public:
+        StringToken(const std::string& c) : Token(c) {}
+        Token::Type GetTokenType() const override { return Token::Type::String; };
     };
 };

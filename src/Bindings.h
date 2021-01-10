@@ -11,10 +11,8 @@ namespace stx
     class Token;
     class Pack;
 
-    // first = invoke (func), second = priority level (uchar)
-    typedef std::pair<std::function<std::shared_ptr<Element>(const Element&, const Element&)>, unsigned char> OptInfo;
-
-    //typedef std::map<std::string, std::function<std::shared_ptr<Element>(const Element&, const Element&)>> OptMap;
+    typedef std::function<std::shared_ptr<Element>(const Element&, const Element&)> OptSignature;
+    typedef std::pair<OptSignature, unsigned char> OptInfo;
     typedef std::map<std::string, OptInfo> OptMap;
     typedef std::map<std::string, std::function<void(Pack&)>> FuncMap;
     typedef std::map<std::string, std::shared_ptr<Token>> VarMap;

@@ -43,7 +43,7 @@ namespace stx
         {
             Token* t = (Token*)(e.get());
             Pack* p = (Pack*)(e.get());
-            switch (e->GetType())
+            switch (e->GetElementType())
             {
             case Element::Type::Token:
                 for (size_t i = 0; i < tab; i++)
@@ -54,15 +54,14 @@ namespace stx
                 SetConsoleTextAttribute(hConsole, 7);
                 os << "\t" <<
                     std::vector<std::string>({
-                            "Unknown",
-                            "Function",
-                            "Number",
                             "Null",
+                            "Operator",
                             "Variable",
                             "Macro",
-                            "String",
-                            "Operator"
-                        })[size_t(t->type)];
+                            "Number",
+                            "Function",
+                            "String"
+                        })[size_t(t->GetTokenType())];
 
                 if (false /*?todo: error statement*/)
                     os << " <E>";
@@ -85,11 +84,11 @@ namespace stx
     {
         for (size_t i = 0; i < size(); i++)
         {
-            Element::Type type = (*this)[i]->GetType();
+            Element::Type type = (*this)[i]->GetElementType();
             if (type == Element::Type::Token)
             {
                 std::shared_ptr<Token> t = std::dynamic_pointer_cast<Token>((*this)[i]);
-                if (t->type != Token::Type::Operator)
+                if (t->GetTokenType() != Token::Type::Operator)
                     continue;
 
                 if (i == 0 || i == size() - 1)

@@ -2,8 +2,5 @@
 
 namespace stx
 {
-    void Token::Resolve()
-    {
 
-    }
 }

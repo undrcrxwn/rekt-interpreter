@@ -11,16 +11,10 @@ namespace stx
     class Pack : public Element, public std::vector<std::shared_ptr<Element>>
     {
     public:
-        Element::Type GetType() const override { return Element::Type::Pack; }
+        Element::Type GetElementType() const override { return Element::Type::Pack; }
 
         std::ostream& Print(std::ostream& os = std::cout) const;
         std::string ToString() const;
-
-        void Expound(const Bindings& b) override
-        {
-            for (std::shared_ptr<Element> e : *this)
-                e->Expound(b);
-        }
 
         void Normalize() override
         {

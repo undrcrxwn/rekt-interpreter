@@ -27,8 +27,8 @@ namespace stx
         }
 
         const OptMap operators = {
-            { "for", { impl::For,            0 } },                                             
-            { "^",   { impl::Power,          1 } },            
+            { "for", { impl::For,            0 } },
+            { "^",   { impl::Power,          1 } },
             { "*",   { impl::Multiply,       2 } },
             { "/",   { impl::Divide,         2 } },
             { "%",   { impl::Modulo,         2 } },
@@ -39,14 +39,14 @@ namespace stx
             { ">",   { impl::Greater,        4 } },
             { "<",   { impl::Less,           4 } },
             { ">=",  { impl::GreaterOrEqual, 4 } },
-            { "<=",  { impl::LessOrEqual,    4 } },                                
+            { "<=",  { impl::LessOrEqual,    4 } },
             { "=",   { impl::Assign,         5 } }
         };
 
         const MacroMap macros = {
-            { "PI",   []() { return std::make_shared<Token>(Token(Token::Type::Number, "3.141592")); } },
-            { "RAND", []() { return std::make_shared<Token>(Token(Token::Type::Number, std::to_string(rand() / float(RAND_MAX)))); } },
-            { "NL",   []() { return std::make_shared<Token>(Token(Token::Type::String, "\n")); } }
+            { "PI",   []() { return std::make_shared<NumberToken>("3.141592"); } },
+            { "RAND", []() { return std::make_shared<NumberToken>(std::to_string(rand() / float(RAND_MAX))); } },
+            { "NL",   []() { return std::make_shared<StringToken>("\n"); } }
         };
     }
 
@@ -58,105 +58,150 @@ namespace stx
         *this = Parser(b);
     }
 
-    Pack Parser::Parse(const std::string& s) const
+    std::shared_ptr<Pack> Parser::Parse(const std::string& s)
     {
-        Pack result;
-
         std::cout << "RAW PACK\n\n";
-        result = FormRawPack(s);
-        result.Print() << "\n\n";
-
-        std::cout << "EXPOUND\n\n";
-        result.Expound(bindings);
-        result.Print() << "\n\n";
+        std::shared_ptr<Pack> result = FormRawPack(s);
+        result->Print() << "\n\n";
 
         std::cout << "NORMALIZE\n\n";
-        result.Normalize();
-        result.Print() << "\n\n";
+        result->Normalize();
+        result->Print() << "\n\n";
 
         std::cout << "CHOP\n\n";
-        result.Chop(bindings.operators);
-        result.Print() << "\n\n";
+        result->Chop(bindings.operators);
+        result->Print() << "\n\n";
 
         std::cout << "PROCESS\n\n";
-        result.Process();
-        result.Print() << "\n\n";
+        result->Process();
+        result->Print() << "\n\n";
 
         std::cout << "RESOLVE\n\n";
-        result.Resolve();
-        result.Print() << "\n\n";
+        result->Resolve();
+        result->Print() << "\n\n";
 
         return result;
     }
 
-    Pack Parser::FormRawPack(const std::string& s)
+    std::shared_ptr<Pack> Parser::FormRawPack(const std::string& s)
     {
         return FormRawPack(s, 0).first;
     }
 
-    std::pair<Pack, size_t> Parser::FormRawPack(const std::string& s, size_t i)
+    std::pair<std::shared_ptr<Pack>, size_t> Parser::FormRawPack(const std::string& s, size_t i)
     {
-        Pack result;
-        result.push_back(std::make_shared<Token>(Token::Type::Unknown, ""));
+        std::shared_ptr<Pack> result(new Pack);
+        std::string lastContent = "";
 
         bool isForcedString = false;
         for (; i < s.size(); i++)
         {
-            Element* last = result.back().get();
-
             if (i > 0 && s[i - 1] == '\\')
-                ((Token*)last)->content += s[i];
-            else
             {
-                if (isForcedString)
-                {
-                    if (s[i] == '"')
-                        isForcedString = !isForcedString;
-                    else
-                        ((Token*)last)->content += s[i];
-                    continue;
-                }
+                lastContent += s[i];
+                continue;
+            }
 
-                if (s[i] == ' ')
-                {
-                    if (last->GetType() != Element::Type::Token ||
-                        ((Token*)last)->content != "")
-                        result.push_back(std::make_shared<Token>(Token::Type::Unknown, ""));
-                }
-                else if (s[i] == '"')
+            if (isForcedString)
+            {
+                if (s[i] == '"')
                     isForcedString = !isForcedString;
-                else if (s[i] == '(')
-                {
-                    if (result.back()->GetType() == Element::Type::Token &&
-                        ((Token*)last)->content == "")
-                        result.pop_back();
-                    std::pair<Pack, size_t> resp = FormRawPack(s, i + 1);
-                    if (resp.first.size() == 0)
-                        result.push_back(std::make_shared<Token>(Token::Type::Unknown, ""));
-                    else
-                        result.push_back(std::make_shared<Pack>(resp.first));
-                    i = resp.second;
-                }
-                else if (s[i] == ')')
-                {
-                    if (last->GetType() == Element::Type::Token &&
-                        ((Token*)last)->content == "")
-                        result.pop_back();
-                    break;
-                }
                 else
+                    lastContent += s[i];
+                continue;
+            }
+
+            if (s[i] == ' ')
+            {
+                if (lastContent != "")
                 {
-                    if (result.back()->GetType() != Element::Type::Token)
-                        result.push_back(std::make_shared<Token>(Token::Type::Unknown, ""));
-                    ((Token*)result.back().get())->content += s[i];
+                    result->push_back(ParseToken(lastContent));
+                    lastContent = "";
                 }
             }
+            else if (s[i] == '"')
+                isForcedString = !isForcedString;
+            else if (s[i] == '(')
+            {
+                std::pair<std::shared_ptr<Pack>, size_t> resp = FormRawPack(s, i + 1);
+                if (resp.first->size() > 0)
+                    result->push_back(resp.first);
+                i = resp.second;
+            }
+            else if (s[i] == ')')
+            {
+                if (lastContent != "")
+                {
+                    result->push_back(ParseToken(lastContent));
+                    lastContent = "";
+                }
+                break;
+            }
+            else
+                lastContent += s[i];
         }
 
-        if (result.size() == 1 &&
-            result[0]->GetType() == Element::Type::Token &&
-            ((Token*)(result[0].get()))->content == "")
-            result.pop_back();
+        if (lastContent != "")
+            result->push_back(ParseToken(lastContent));
+
+        if (result->size() == 1 &&
+            (*result)[0]->GetElementType() == Element::Type::Token &&
+            ((Token*)((*result)[0].get()))->content == "")
+            result->pop_back();
+
         return std::make_pair(result, i);
+    }
+
+    std::shared_ptr<Token> Parser::ParseToken(const std::string& s)
+    {
+        // null
+        if (s == "" || s == "NULL")
+            return std::shared_ptr<Token>(new NullToken);
+
+        // operator
+        auto opt = bindings.operators.find(s);
+        if (opt != bindings.operators.end())
+            return std::shared_ptr<Token>(new OperatorToken(s, &opt->second.first));
+
+        // variable
+        if (s[0] == '$' && s.size() > 1)
+        {
+            std::string varName = s.substr(1, s.size());
+            auto var = bindings.variables.find(varName);
+            if (var == bindings.variables.end())
+                throw std::runtime_error("Parsing error: an undeclared variable " + s + " was used.");
+            return std::shared_ptr<Token>(new VariableToken(varName, var->second));
+        }
+
+        // macro
+        auto macro = bindings.macros.find(s);
+        if (macro != bindings.macros.end())
+            return std::shared_ptr<Token>(new MacroToken(s, &macro->second));
+
+        // special string cases
+        std::string lowercase(s);
+        std::transform(s.begin(), s.end(), lowercase.begin(),
+            [](char c) { return std::tolower(c); });
+        if (lowercase == "inf" || lowercase == "nan")
+            return std::shared_ptr<Token>(new StringToken(s));
+
+        // number
+        char* p;
+        if (std::isinf(strtod(s.c_str(), &p)))
+            throw std::runtime_error("Parsing error: number value " + s + " is not valid.");
+
+        if (!*p)
+            return std::shared_ptr<Token>(new NumberToken(s));
+
+        // function
+        auto func = bindings.functions.find(s);
+        if (func != bindings.functions.end())
+            return std::shared_ptr<Token>(new FunctionToken(s, &func->second));
+
+        // string
+        std::string trimmed(s);
+        for (size_t i = 0; i < trimmed.size(); i++)
+            if (trimmed[i] == '\\') trimmed.erase(trimmed.begin() + i);
+        return std::shared_ptr<Token>(new StringToken(trimmed));
     }
 }

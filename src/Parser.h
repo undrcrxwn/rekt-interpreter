@@ -32,10 +32,11 @@ namespace stx
 
         Parser();
         Parser(Bindings& b) : bindings(b) {};
-        Pack Parse(const std::string& s) const;
+        std::shared_ptr<Pack> Parse(const std::string& s);
 
     protected:
-        static Pack FormRawPack(const std::string& s);
-        static std::pair<Pack, size_t> FormRawPack(const std::string& s, size_t i);
+        std::shared_ptr<Pack> FormRawPack(const std::string& s);
+        std::pair<std::shared_ptr<Pack>, size_t> FormRawPack(const std::string& s, size_t i);
+        std::shared_ptr<Token> ParseToken(const std::string& s);
     };
 }

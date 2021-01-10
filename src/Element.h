@@ -13,8 +13,7 @@ namespace stx
 			Pack
 		};
 
-		virtual Type GetType() const = 0;
-		virtual void Expound(const Bindings& b) = 0;
+		virtual Type GetElementType() const = 0;
 		virtual void Normalize() = 0;
 	};
 }
