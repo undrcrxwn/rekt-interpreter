@@ -139,16 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Bindings.cpp" />
     <ClCompile Include="src\Pack.cpp" />
-    <ClCompile Include="src\Element.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Pack.h" />
     <None Include="src\Element.h" />
-    <None Include="src\Token.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Parser.h" />

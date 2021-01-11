@@ -18,23 +18,16 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Element.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Pack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Bindings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Element.h" />
     <None Include="src\Pack.h" />
-    <None Include="src\Token.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Token.h">

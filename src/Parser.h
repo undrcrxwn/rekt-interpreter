@@ -1,6 +1,10 @@
 #pragma once
 #include "bindings.h"
 #include <memory>
+#include <vector>
+#include "Element.h"
+#include "Pack.h"
+#include "Token.h"
 
 namespace stx
 {
@@ -25,6 +29,17 @@ namespace stx
         }
     }
 
+    class OperatorPackingVisitor : public Element::Visitor
+    {
+    public:
+        OperatorPackingVisitor(const std::vector<std::string>& ots) : optGroup(ots) {}
+        void VisitToken(Token& t) const override {}
+        void VisitPack(Pack& p) const override;
+
+    protected:
+        const std::vector<std::string> optGroup;
+    };
+
     class Parser
     {
     public:
@@ -34,7 +49,7 @@ namespace stx
         Parser(Bindings& b) : bindings(b) {};
         std::shared_ptr<Pack> Parse(const std::string& s);
 
-    protected:
+    private:
         std::shared_ptr<Pack> FormRawPack(const std::string& s);
         std::pair<std::shared_ptr<Pack>, size_t> FormRawPack(const std::string& s, size_t i);
         std::shared_ptr<Token> ParseToken(const std::string& s);

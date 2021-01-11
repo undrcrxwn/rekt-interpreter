@@ -61,26 +61,21 @@ namespace stx
     std::shared_ptr<Pack> Parser::Parse(const std::string& s)
     {
         std::cout << "RAW PACK\n\n";
-        std::shared_ptr<Pack> result = FormRawPack(s);
-        result->Print() << "\n\n";
-
-        std::cout << "NORMALIZE\n\n";
-        result->Normalize();
-        result->Print() << "\n\n";
+        std::shared_ptr<Pack> res = FormRawPack(s);
+        res->Print() << "\n\n";
 
         std::cout << "CHOP\n\n";
-        result->Chop(bindings.operators);
-        result->Print() << "\n\n";
+        std::map<unsigned char, std::vector<std::string>> groups;
+        for (auto& o : bindings.operators)
+            groups[o.second.second].push_back(o.first);
+        for (auto& group : groups)
+        {
+            OperatorPackingVisitor packer(group.second);
+            res->Accept(packer);
+        }
+        res->Print() << "\n\n";
 
-        std::cout << "PROCESS\n\n";
-        result->Process();
-        result->Print() << "\n\n";
-
-        std::cout << "RESOLVE\n\n";
-        result->Resolve();
-        result->Print() << "\n\n";
-
-        return result;
+        return res;
     }
 
     std::shared_ptr<Pack> Parser::FormRawPack(const std::string& s)
@@ -90,7 +85,7 @@ namespace stx
 
     std::pair<std::shared_ptr<Pack>, size_t> Parser::FormRawPack(const std::string& s, size_t i)
     {
-        std::shared_ptr<Pack> result(new Pack);
+        std::shared_ptr<Pack> res(new Pack);
         std::string lastContent = "";
 
         bool isForcedString = false;
@@ -115,7 +110,7 @@ namespace stx
             {
                 if (lastContent != "")
                 {
-                    result->push_back(ParseToken(lastContent));
+                    res->push_back(ParseToken(lastContent));
                     lastContent = "";
                 }
             }
@@ -125,14 +120,14 @@ namespace stx
             {
                 std::pair<std::shared_ptr<Pack>, size_t> resp = FormRawPack(s, i + 1);
                 if (resp.first->size() > 0)
-                    result->push_back(resp.first);
+                    res->push_back(resp.first);
                 i = resp.second;
             }
             else if (s[i] == ')')
             {
                 if (lastContent != "")
                 {
-                    result->push_back(ParseToken(lastContent));
+                    res->push_back(ParseToken(lastContent));
                     lastContent = "";
                 }
                 break;
@@ -142,14 +137,14 @@ namespace stx
         }
 
         if (lastContent != "")
-            result->push_back(ParseToken(lastContent));
+            res->push_back(ParseToken(lastContent));
 
-        if (result->size() == 1 &&
-            (*result)[0]->GetElementType() == Element::Type::Token &&
-            ((Token*)((*result)[0].get()))->content == "")
-            result->pop_back();
+        if (res->size() == 1 &&
+            (*res)[0]->GetElementType() == Element::Type::Token &&
+            ((Token*)((*res)[0].get()))->content == "")
+            res->pop_back();
 
-        return std::make_pair(result, i);
+        return std::make_pair(res, i);
     }
 
     std::shared_ptr<Token> Parser::ParseToken(const std::string& s)
@@ -169,7 +164,7 @@ namespace stx
             std::string varName = s.substr(1, s.size());
             auto var = bindings.variables.find(varName);
             if (var == bindings.variables.end())
-                throw std::runtime_error("Parsing error: an undeclared variable " + s + " was used.");
+                throw std::runtime_error("Parsing exception: an undeclared variable " + s + " was used.");
             return std::shared_ptr<Token>(new VariableToken(varName, var->second));
         }
 
@@ -188,7 +183,7 @@ namespace stx
         // number
         char* p;
         if (std::isinf(strtod(s.c_str(), &p)))
-            throw std::runtime_error("Parsing error: number value " + s + " is not valid.");
+            throw std::runtime_error("Parsing exception: number value " + s + " is not valid.");
 
         if (!*p)
             return std::shared_ptr<Token>(new NumberToken(s));
@@ -203,5 +198,38 @@ namespace stx
         for (size_t i = 0; i < trimmed.size(); i++)
             if (trimmed[i] == '\\') trimmed.erase(trimmed.begin() + i);
         return std::shared_ptr<Token>(new StringToken(trimmed));
+    }
+
+    void OperatorPackingVisitor::VisitPack(Pack& p) const
+    {
+        for (size_t i = 0; i < p.size(); i++)
+        {
+            Element::Type type = p[i]->GetElementType();
+            if (type == Element::Type::Token)
+            {
+                std::shared_ptr<Token> t = std::dynamic_pointer_cast<Token>(p[i]);
+                if (t->GetTokenType() != Token::Type::Operator)
+                    continue;
+
+                if (i == 0 || i == p.size() - 1)
+                    throw std::runtime_error("Choppig exception: unsupported operator signature.");
+
+                std::shared_ptr<Element> l = p[i - 1];
+                std::shared_ptr<Element> r = p[i + 1];
+
+                if (std::find(optGroup.begin(), optGroup.end(), t->content) == optGroup.end())
+                    continue;
+
+                Pack* res = new Pack;
+                res->push_back(l);
+                res->push_back(t);
+                res->push_back(r);
+                p[i - 1] = std::shared_ptr<Element>(res);
+                p.erase(p.begin() + i, p.begin() + i + 2);
+                i--;
+            }
+            else if (type == Element::Type::Pack)
+                p[i]->Accept(*(Visitor*)this);
+        }
     }
 }

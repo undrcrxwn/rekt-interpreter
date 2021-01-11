@@ -24,6 +24,7 @@ namespace stx
         std::string content;
 
         Element::Type GetElementType() const override { return Element::Type::Token; }
+        void Accept(Visitor& v) override { v.VisitToken(*this); }
         virtual Token::Type GetTokenType() const = 0;
 
         virtual void Normalize() {}
@@ -76,7 +77,7 @@ namespace stx
         NumberToken(const std::string& c) : Token(c) {}
         Token::Type GetTokenType() const override { return Token::Type::Number; };
     };
-    
+
     class FunctionToken : public Token
     {
     public:

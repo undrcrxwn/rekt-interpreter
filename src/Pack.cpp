@@ -16,25 +16,6 @@ namespace stx
         return "";
     }
 
-    void Pack::Chop(const OptMap& ots)
-    {
-        std::map<unsigned char, std::vector<std::string>> groups;
-        for (auto& o : ots)
-            groups[o.second.second].push_back(o.first);
-        for (auto& group : groups)
-            PackByOperators(group.second);
-    }
-
-    void Pack::Resolve()
-    {
-
-    }
-
-    void Pack::Process()
-    {
-
-    }
-
     std::pair<std::ostream*, size_t> Pack::Print(std::ostream& os, size_t tab) const
     {
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -78,44 +59,5 @@ namespace stx
         }
 
         return std::make_pair(&os, tab);
-    }
-
-    void Pack::PackByOperators(const std::vector<std::string>& ots)
-    {
-        for (size_t i = 0; i < size(); i++)
-        {
-            Element::Type type = (*this)[i]->GetElementType();
-            if (type == Element::Type::Token)
-            {
-                std::shared_ptr<Token> t = std::dynamic_pointer_cast<Token>((*this)[i]);
-                if (t->GetTokenType() != Token::Type::Operator)
-                    continue;
-
-                if (i == 0 || i == size() - 1)
-                {
-                    //? todo: throw unsupported signature
-                    continue;
-                }
-
-                std::shared_ptr<Element> l = (*this)[i - 1];
-                std::shared_ptr<Element> r = (*this)[i + 1];
-
-                if (std::find(ots.begin(), ots.end(), t->content) == ots.end())
-                    continue;
-
-                Pack* p = new Pack;
-                p->push_back(l);
-                p->push_back(t);
-                p->push_back(r);
-                (*this)[i - 1] = std::shared_ptr<Element>(p);
-                erase(begin() + i, begin() + i + 2);
-                i--;
-            }
-            else if (type == Element::Type::Pack)
-            {
-                Pack* p = (Pack*)(*this)[i].get();
-                p->PackByOperators(ots);
-            }
-        }
     }
 }

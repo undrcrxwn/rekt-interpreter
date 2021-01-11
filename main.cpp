@@ -11,7 +11,7 @@ int main()
     stx::Parser parser;
     parser.bindings.variables.emplace("world", std::shared_ptr<stx::Token>(new stx::StringToken("w0rLD")));
     std::shared_ptr<stx::Pack> root = parser.Parse(input);
-    
+
     std::cout << "STRING OUTPUT\n";
     std::cout << root->ToString() << "\n\n\n";
 

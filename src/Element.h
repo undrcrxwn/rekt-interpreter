@@ -2,18 +2,25 @@
 
 namespace stx
 {
-	struct Bindings;
+    class Token;
+    class Pack;
 
-	class Element
-	{
-	public:
-		enum class Type
-		{
-			Token,
-			Pack
-		};
+    class Element
+    {
+    public:
+        enum class Type
+        {
+            Token,
+            Pack
+        };
 
-		virtual Type GetElementType() const = 0;
-		virtual void Normalize() = 0;
-	};
+        class Visitor {
+        public:
+            virtual void VisitToken(Token& t) const = 0;
+            virtual void VisitPack(Pack& p) const = 0;
+        };
+
+        virtual Type GetElementType() const = 0;
+        virtual void Accept(Visitor& v) = 0;
+    };
 }
