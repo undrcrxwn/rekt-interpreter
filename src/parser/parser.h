@@ -1,10 +1,10 @@
 #pragma once
-#include "bindings.h"
+#include "../bindings.h"
+#include "../element/element.h"
+#include "../element/pack.h"
+#include "../element/token.h"
 #include <memory>
 #include <vector>
-#include "Element.h"
-#include "Pack.h"
-#include "Token.h"
 
 namespace stx
 {

@@ -18,28 +18,28 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Pack.cpp">
+    <ClCompile Include="src\element\pack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Parser.cpp">
+    <ClCompile Include="src\parser\parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Element.h" />
-    <None Include="src\Pack.h" />
+    <None Include="src\element\pack.h" />
+    <None Include="src\element\element.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Token.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Parser.h">
+    <ClInclude Include="src\bindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Bindings.h">
+    <ClInclude Include="src\element\token.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\parser\parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

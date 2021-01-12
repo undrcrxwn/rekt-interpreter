@@ -139,18 +139,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Pack.cpp" />
+    <ClCompile Include="src\element\pack.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\Parser.cpp" />
+    <ClCompile Include="src\parser\parser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Pack.h" />
-    <None Include="src\Element.h" />
+    <None Include="src\element\pack.h" />
+    <None Include="src\element\element.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Parser.h" />
-    <ClInclude Include="src\Bindings.h" />
-    <ClInclude Include="src\Token.h" />
+    <ClInclude Include="src\parser\parser.h" />
+    <ClInclude Include="src\bindings.h" />
+    <ClInclude Include="src\element\token.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

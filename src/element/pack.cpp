@@ -1,8 +1,8 @@
-﻿#include "Pack.h"
-#include "Token.h"
+﻿#include "pack.h"
+#include "token.h"
 #include <utility>
-#include "windows.h"
 #include <iostream>
+#include "windows.h"
 
 namespace stx
 {

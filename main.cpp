@@ -1,7 +1,6 @@
-#include "src/Token.h"
-#include "src/Pack.h"
-#include "src/Parser.h"
-#include "windows.h"
+#include "src/element/token.h"
+#include "src/element/pack.h"
+#include "src/parser/parser.h"
 
 int main()
 {

@@ -1,7 +1,4 @@
-#include "Parser.h"
-#include "Token.h"
-#include "Pack.h"
-#include "bindings.h"
+#include "parser.h"
 #include <string>
 
 namespace stx

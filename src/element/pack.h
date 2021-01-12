@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "Element.h"
-#include "Bindings.h"
+#include "element.h"
+#include "../bindings.h"
 #include <string>
 #include <vector>
 #include <memory>
