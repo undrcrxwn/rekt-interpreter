@@ -1,60 +1,8 @@
 #include "parser.h"
 #include <string>
 
-namespace stx
+namespace rekt
 {
-    namespace defaults
-    {
-        namespace impl
-        {
-            std::shared_ptr<Element> Power(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Multiply(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Divide(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Modulo(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Add(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Subtract(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> For(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Equal(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> NotEqual(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Greater(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Less(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> GreaterOrEqual(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> LessOrEqual(const Element& l, const Element& r) { return nullptr; }
-            std::shared_ptr<Element> Assign(const Element& l, const Element& r) { return nullptr; }
-        }
-
-        const OptMap operators = {
-            { "for", { impl::For,            0 } },
-            { "^",   { impl::Power,          1 } },
-            { "*",   { impl::Multiply,       2 } },
-            { "/",   { impl::Divide,         2 } },
-            { "%",   { impl::Modulo,         2 } },
-            { "+",   { impl::Add,            3 } },
-            { "-",   { impl::Subtract,       3 } },
-            { "==",  { impl::Equal,          4 } },
-            { "!=",  { impl::NotEqual,       4 } },
-            { ">",   { impl::Greater,        4 } },
-            { "<",   { impl::Less,           4 } },
-            { ">=",  { impl::GreaterOrEqual, 4 } },
-            { "<=",  { impl::LessOrEqual,    4 } },
-            { "=",   { impl::Assign,         5 } }
-        };
-
-        const MacroMap macros = {
-            { "PI",   []() { return std::make_shared<NumberToken>("3.141592"); } },
-            { "RAND", []() { return std::make_shared<NumberToken>(std::to_string(rand() / float(RAND_MAX))); } },
-            { "NL",   []() { return std::make_shared<StringToken>("\n"); } }
-        };
-    }
-
-    Parser::Parser()
-    {
-        Bindings b;
-        b.operators = defaults::operators;
-        b.macros = defaults::macros;
-        *this = Parser(b);
-    }
-
     std::shared_ptr<Pack> Parser::Parse(const std::string& s)
     {
         std::cout << "RAW PACK\n\n";
@@ -64,11 +12,11 @@ namespace stx
         std::cout << "CHOP\n\n";
         std::map<unsigned char, std::vector<std::string>> groups;
         for (auto& o : bindings.operators)
-            groups[o.second.second].push_back(o.first);
+            groups[o.second.priority].push_back(o.first);
         for (auto& group : groups)
         {
             OperatorPackingVisitor packer(group.second);
-            res->Accept(packer);
+            res->Accept(&packer);
         }
         res->Print() << "\n\n";
 
@@ -153,7 +101,7 @@ namespace stx
         // operator
         auto opt = bindings.operators.find(s);
         if (opt != bindings.operators.end())
-            return std::shared_ptr<Token>(new OperatorToken(s, &opt->second.first));
+            return std::shared_ptr<Token>(new OperatorToken(s, &opt->second.signature, opt->second.isLazyProcessed));
 
         // variable
         if (s[0] == '$' && s.size() > 1)
@@ -197,22 +145,24 @@ namespace stx
         return std::shared_ptr<Token>(new StringToken(trimmed));
     }
 
-    void OperatorPackingVisitor::VisitPack(Pack& p) const
+    void OperatorPackingVisitor::Visit(std::shared_ptr<Pack>&& p) const
     {
-        for (size_t i = 0; i < p.size(); i++)
+        std::cout << "CHOPPING VISITOR TO " << p->ToString() << "\n\n";
+
+        for (size_t i = 0; i < p->size(); i++)
         {
-            Element::Type type = p[i]->GetElementType();
+            Element::Type type = (*p)[i]->GetElementType();
             if (type == Element::Type::Token)
             {
-                std::shared_ptr<Token> t = std::dynamic_pointer_cast<Token>(p[i]);
+                std::shared_ptr<Token> t = std::dynamic_pointer_cast<Token>((*p)[i]);
                 if (t->GetTokenType() != Token::Type::Operator)
                     continue;
 
-                if (i == 0 || i == p.size() - 1)
+                if (i == 0 || i == p->size() - 1)
                     throw std::runtime_error("Choppig exception: unsupported operator signature.");
 
-                std::shared_ptr<Element> l = p[i - 1];
-                std::shared_ptr<Element> r = p[i + 1];
+                std::shared_ptr<Element> l = (*p)[i - 1];
+                std::shared_ptr<Element> r = (*p)[i + 1];
 
                 if (std::find(optGroup.begin(), optGroup.end(), t->content) == optGroup.end())
                     continue;
@@ -221,12 +171,22 @@ namespace stx
                 res->push_back(l);
                 res->push_back(t);
                 res->push_back(r);
-                p[i - 1] = std::shared_ptr<Element>(res);
-                p.erase(p.begin() + i, p.begin() + i + 2);
+
+                std::cout << "CHOPPING GROUP\n";
+                std::cout << "  left:\t" << l->ToString() << "\n";
+                std::cout << "   opt:\t" << t->ToString() << "\n";
+                std::cout << " right:\t" << r->ToString() << "\n";
+                std::cout << "   res:\t" << res->ToString() << "\n\n";
+
+                (*p)[i - 1] = std::shared_ptr<Element>(res);
+                p->erase(p->begin() + i, p->begin() + i + 2);
                 i--;
+
+                l->Accept((Visitor*)this);
+                r->Accept((Visitor*)this);
             }
             else if (type == Element::Type::Pack)
-                p[i]->Accept(*(Visitor*)this);
+                (*p)[i]->Accept((Visitor*)this);
         }
     }
 }

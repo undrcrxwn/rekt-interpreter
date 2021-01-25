@@ -139,8 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\bindings.cpp" />
+    <ClCompile Include="src\core\core.cpp" />
+    <ClCompile Include="src\element\element.cpp" />
     <ClCompile Include="src\element\pack.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\element\token.cpp" />
     <ClCompile Include="src\parser\parser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +152,8 @@
     <None Include="src\element\element.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\core.h" />
+    <ClInclude Include="src\exception.h" />
     <ClInclude Include="src\parser\parser.h" />
     <ClInclude Include="src\bindings.h" />
     <ClInclude Include="src\element\token.h" />
