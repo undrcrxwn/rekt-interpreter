@@ -18,19 +18,7 @@ namespace rekt
         std::shared_ptr<Pack> Parse(const std::string& s);
 
     private:
-        std::shared_ptr<Pack> FormRawPack(const std::string& s);
-        std::pair<std::shared_ptr<Pack>, size_t> FormRawPack(const std::string& s, size_t i);
+        std::pair<std::shared_ptr<Pack>, size_t> Parse(const std::string& s, size_t i);
         std::shared_ptr<Token> ParseToken(const std::string& s);
-    };
-
-    class OperatorPackingVisitor : public Element::Visitor
-    {
-    public:
-        OperatorPackingVisitor(const std::vector<std::string>& ots) : optGroup(ots) {}
-        void Visit(std::shared_ptr<Token>&& t) const override {}
-        void Visit(std::shared_ptr<Pack>&& p) const override;
-
-    protected:
-        const std::vector<std::string> optGroup;
     };
 }

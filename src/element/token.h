@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "element.h"
 #include "../bindings.h"
+#include "pack.h"
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -24,10 +25,11 @@ namespace rekt
         std::string content;
 
         Element::Type GetElementType() const override { return Element::Type::Token; }
-        void Accept(Visitor* v) override { v->Visit(std::dynamic_pointer_cast<Token>(shared_from_this())); }
+        void Accept(Visitor* v) override { v->Visit(*this); }
         virtual Token::Type GetTokenType() const = 0;
 
         virtual void Normalize() {}
+        virtual std::shared_ptr<Element> Process() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Resolve() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Clone() override = 0;
         virtual std::string ToString() const override;
@@ -50,14 +52,12 @@ namespace rekt
     {
     public:
         bool isLazyProcessed;
+        FuncProcessor* processor;
 
-        OperatorToken(const std::string& c, OptSignature* f, bool lazy) : Token(c), processor(f), isLazyProcessed(lazy) {}
+        OperatorToken(const std::string& c, FuncProcessor* f, bool lazy) : Token(c), processor(f), isLazyProcessed(lazy) {}
         Token::Type GetTokenType() const override { return Token::Type::Operator; };
         std::shared_ptr<Element> Clone() override { return std::shared_ptr<Element>(new OperatorToken(*this)); }
         std::shared_ptr<Element> Process(std::shared_ptr<Element> l, std::shared_ptr<Element> r);
-
-    protected:
-        OptSignature* processor;
     };
 
     class VariableToken : public Token
@@ -114,12 +114,19 @@ namespace rekt
     class FunctionToken : public Token
     {
     public:
-        FunctionToken(const std::string& c, std::function<void(Pack&)>* f) : Token(c), processor(f) {}
-        Token::Type GetTokenType() const override { return Token::Type::Function; };
-        std::shared_ptr<Element> Clone() override { return std::shared_ptr<Element>(new FunctionToken(*this)); }
+        FuncProcessor* processor;
+        Pack arguments;
 
-    protected:
-        std::function<void(Pack&)>* processor;
+        FunctionToken(const std::string& c, FuncProcessor* f) : Token(c), processor(f) {}
+        FunctionToken(const std::string& c, FuncProcessor* f, Pack& args) : Token(c), processor(f), arguments(args) {}
+        Token::Type GetTokenType() const override { return Token::Type::Function; };
+        std::shared_ptr<Element> Clone() override
+        {
+            return std::shared_ptr<Element>(new FunctionToken(content, processor, (Pack&)*arguments.Clone()));
+        }
+
+        std::shared_ptr<Element> Process() override;
+        std::shared_ptr<Element> Resolve() override;
     };
 
     class StringToken : public Token

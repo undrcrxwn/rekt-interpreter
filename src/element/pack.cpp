@@ -54,6 +54,7 @@ namespace rekt
                 SetConsoleTextAttribute(hConsole, 112);
                 os << t->content;
                 SetConsoleTextAttribute(hConsole, 7);
+
                 int offset = 25 - tab - t->content.size();
                 if (offset > 0)
                     os << std::setw(offset) << " ";
@@ -78,6 +79,12 @@ namespace rekt
                 SetConsoleTextAttribute(hConsole, 7);
 
                 os << "\n";
+
+                if (t->GetTokenType() == Token::Type::Function)
+                {
+                    FunctionToken& ft = (FunctionToken&)*t;
+                    ft.arguments.Print(os, tab + 1);
+                }
             }
             else if (type == Element::Type::Pack)
                 p->Print(os, tab + 1);

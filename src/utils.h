@@ -1,3 +1,1 @@
 ﻿#pragma once
-
-double 

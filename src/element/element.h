@@ -18,8 +18,8 @@ namespace rekt
 
         class Visitor {
         public:
-            virtual void Visit(std::shared_ptr<Token>&& t) const = 0;
-            virtual void Visit(std::shared_ptr<Pack>&& p) const = 0;
+            virtual void Visit(Token& t) = 0;
+            virtual void Visit(Pack& p) = 0;
         };
 
         virtual Type GetElementType() const = 0;

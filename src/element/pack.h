@@ -11,8 +11,10 @@ namespace rekt
     class Pack : public Element, public std::vector<std::shared_ptr<Element>>
     {
     public:
+        using std::vector<std::shared_ptr<Element>>::vector;
+
         Element::Type GetElementType() const override { return Element::Type::Pack; }
-        void Accept(Visitor* v) override { v->Visit(std::dynamic_pointer_cast<Pack>(shared_from_this())); }
+        void Accept(Visitor* v) override { v->Visit(*this); }
         std::shared_ptr<Element> Clone() override
         {
             std::shared_ptr<Pack> res(new Pack);

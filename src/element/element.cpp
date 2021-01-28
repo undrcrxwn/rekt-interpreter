@@ -19,7 +19,6 @@ namespace rekt
                     return res;
             }
         }
-
         throw std::runtime_error("Cannot get the deepest element: ran out of attempts.");
     }
 }

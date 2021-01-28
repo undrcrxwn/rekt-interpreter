@@ -12,22 +12,22 @@ namespace rekt
 
         Core() = default;
         Core(Bindings& b) : bindings(b) {};
-        void Execute(std::shared_ptr<Pack>& p);
-        void Process(std::shared_ptr<Pack>& p);
-        void Resolve(std::shared_ptr<Pack>& p);
+        void Execute(Pack& p);
+        void PackOperators(Element& e);
+        static void Process(std::shared_ptr<Element>& e);
+        static void Process(Pack& p);
+        static void Resolve(std::shared_ptr<Element>& e);
+        static void Resolve(Pack& p);
     };
 
-    class ProcessingVisitor : public Element::Visitor
+    class OperatorPacker : public Element::Visitor
     {
     public:
-        void Visit(std::shared_ptr<Token>&& t) const override {}
-        void Visit(std::shared_ptr<Pack>&& p) const override;
-    };
-    
-    class ResolvingVisitor : public Element::Visitor
-    {
-    public:
-        void Visit(std::shared_ptr<Token>&& t) const override {}
-        void Visit(std::shared_ptr<Pack>&& p) const override;
+        OperatorPacker(const std::vector<std::string>& opts) : optGroup(opts) {}
+        void Visit(Token& t) override;
+        void Visit(Pack& p) override;
+
+    protected:
+        const std::vector<std::string>& optGroup;
     };
 }

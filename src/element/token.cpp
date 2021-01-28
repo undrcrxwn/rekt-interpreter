@@ -1,11 +1,13 @@
 #include "token.h"
 #include "../core/core.h"
+#include "pack.h"
 
 namespace rekt
 {
     std::shared_ptr<Element> OperatorToken::Process(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
     {
-        return (*processor)(l, r);
+        Pack args = { l, r };
+        return (*processor)(args);
     }
 
     std::shared_ptr<Element> MacroToken::Resolve()
@@ -17,11 +19,23 @@ namespace rekt
             throw std::runtime_error("Maximum recursion depth exceeded.");
 
         iterations++;
-        ResolvingVisitor v;
-        resolved->Accept(&v);
+        Core::Resolve(resolved);
         iterations--;
 
         return resolved;
+    }
+
+    std::shared_ptr<Element> FunctionToken::Process()
+    {
+        std::shared_ptr<Element> res = (*processor)(arguments);
+        Core::Process(res);
+        return res;
+    }
+
+    std::shared_ptr<Element> FunctionToken::Resolve()
+    {
+        Core::Resolve(arguments);
+        return shared_from_this();
     }
 
     std::string Token::ToString() const

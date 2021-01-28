@@ -11,150 +11,190 @@ namespace rekt
     {
         namespace impl
         {
-            std::shared_ptr<Element> Power(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-
-            std::shared_ptr<Element> Multiply(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
+            std::shared_ptr<Element> For(Pack& p)
             {
-                if (l->GetElementType() == Element::Type::Token)
+                /* validating arguments amount */
+                if(p.size() != 2)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                /* early processing */
+                Core::Process(p[1]);
+
+                /* validating signature */
+                if (p[1]->GetElementType() != Element::Type::Token ||
+                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                NumberToken& num = (NumberToken&)*p[1];
+                std::shared_ptr<Pack> res(new Pack);
+                int times = std::abs(atoi(num.content.c_str()));
+                for (size_t i = 0; i < times; i++)
+                    res->push_back(p[0]->Clone());
+
+                return res;
+            }
+
+            std::shared_ptr<Element> Power(Pack& p) { return nullptr; }
+
+            std::shared_ptr<Element> Multiply(Pack& p)
+            {
+                /* validating arguments amount */
+                if (p.size() != 2)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                if (p[0]->GetElementType() == Element::Type::Token)
                 {
-                    /* early resolving */
-                    ResolvingVisitor resolver;
-                    l->Accept(&resolver);
-                    r->Accept(&resolver);
+                    /* early processing */
+                    Core::Process(p[0]);
+                    Core::Process(p[1]);
 
                     /* validating signature */
-                    if (r->GetElementType() != Element::Type::Token ||
-                        ((Token&)*l).GetTokenType() != Token::Type::Number ||
-                        ((Token&)*r).GetTokenType() != Token::Type::Number)
+                    if (p[1]->GetElementType() != Element::Type::Token ||
+                        ((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
+                        ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
                         throw std::runtime_error("Processing error: unsupported signature.");
 
-                    double a = atof(((Token&)*l).content.c_str());
-                    double b = atof(((Token&)*r).content.c_str());
+                    double a = atof(((Token&)*p[0]).content.c_str());
+                    double b = atof(((Token&)*p[1]).content.c_str());
                     std::shared_ptr<NumberToken> res(new NumberToken(std::to_string(a * b)));
                     return res;
                 }
-                else if (l->GetElementType() == Element::Type::Pack)
+                else if (p[0]->GetElementType() == Element::Type::Pack)
                 {
-                    /* early resolving */
-                    ResolvingVisitor resolver;
-                    l->Accept(&resolver);
-                    r->Accept(&resolver);
+                    /* early processing */
+                    Core::Process(p[0]);
+                    Core::Process(p[1]);
 
                     /* validating signature */
-                    if (r->GetElementType() != Element::Type::Token ||
-                        ((Token&)*r).GetTokenType() != Token::Type::Number)
+                    if (p[1]->GetElementType() != Element::Type::Token ||
+                        ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
                         throw std::runtime_error("Processing error: unsupported signature.");
 
-                    std::shared_ptr<Element> res = For(l, r);
+                    Pack args = { p[0], p[1] };
+                    std::shared_ptr<Element> res = For(args);
                     return res;
                 }
             }
 
-            std::shared_ptr<Element> Divide(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
+            std::shared_ptr<Element> Divide(Pack& p) { return nullptr; }
 
-            std::shared_ptr<Element> Modulo(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
+            std::shared_ptr<Element> Modulo(Pack& p)
             {
-                /* early resolving */
-                ResolvingVisitor resolver;
-                l->Accept(&resolver);
-                r->Accept(&resolver);
-
-                /* validating signature */
-                if (l->GetElementType() != Element::Type::Token ||
-                    r->GetElementType() != Element::Type::Token ||
-                    ((Token&)*l).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*r).GetTokenType() != Token::Type::Number)
+                /* validating arguments amount */
+                if (p.size() != 2)
                     throw std::runtime_error("Processing error: unsupported signature.");
 
-                double a = atof(((Token&)*l).content.c_str());
-                double b = atof(((Token&)*r).content.c_str());
+                /* early processing */
+                Core::Process(p[0]);
+                Core::Process(p[1]);
+
+                /* validating signature */
+                if (p[0]->GetElementType() != Element::Type::Token ||
+                    p[1]->GetElementType() != Element::Type::Token ||
+                    ((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
+                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                double a = atof(((Token&)*p[0]).content.c_str());
+                double b = atof(((Token&)*p[1]).content.c_str());
                 std::shared_ptr<NumberToken> res(new NumberToken(std::to_string(std::fmod(a, b))));
                 return res;
             }
 
-            std::shared_ptr<Element> Add(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
+            std::shared_ptr<Element> Add(Pack& p)
             {
-                /* early resolving */
-                ResolvingVisitor resolver;
-                l->Accept(&resolver);
-                r->Accept(&resolver);
-
-                /* validating signature */
-                if (l->GetElementType() != Element::Type::Token ||
-                    r->GetElementType() != Element::Type::Token ||
-                    ((Token&)*l).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*r).GetTokenType() != Token::Type::Number)
+                /* validating arguments amount */
+                if (p.size() != 2)
                     throw std::runtime_error("Processing error: unsupported signature.");
 
-                double a = atof(((Token&)*l).content.c_str());
-                double b = atof(((Token&)*r).content.c_str());
+                /* early processing */
+                Core::Process(p[0]);
+                Core::Process(p[1]);
+
+                /* validating signature */
+                if (p[0]->GetElementType() != Element::Type::Token ||
+                    p[1]->GetElementType() != Element::Type::Token ||
+                    ((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
+                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                double a = atof(((Token&)*p[0]).content.c_str());
+                double b = atof(((Token&)*p[1]).content.c_str());
                 std::shared_ptr<NumberToken> res(new NumberToken(std::to_string(a + b)));
+
                 return res;
             }
 
-            std::shared_ptr<Element> Subtract(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
+            std::shared_ptr<Element> Subtract(Pack& p)
             {
-                /* early resolving */
-                ResolvingVisitor resolver;
-                l->Accept(&resolver);
-                r->Accept(&resolver);
-
-                /* validating signature */
-                if (l->GetElementType() != Element::Type::Token ||
-                    r->GetElementType() != Element::Type::Token ||
-                    ((Token&)*l).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*r).GetTokenType() != Token::Type::Number)
+                /* validating arguments amount */
+                if (p.size() != 2)
                     throw std::runtime_error("Processing error: unsupported signature.");
 
-                double a = atof(((Token&)*l).content.c_str());
-                double b = atof(((Token&)*r).content.c_str());
+                /* early processing */
+                Core::Process(p[0]);
+                Core::Process(p[1]);
+                
+                /* validating signature */
+                if (p[0]->GetElementType() != Element::Type::Token ||
+                    p[1]->GetElementType() != Element::Type::Token ||
+                    ((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
+                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
+                    throw std::runtime_error("Processing error: unsupported signature.");
+
+                double a = atof(((Token&)*p[0]).content.c_str());
+                double b = atof(((Token&)*p[1]).content.c_str());
                 std::shared_ptr<NumberToken> res(new NumberToken(std::to_string(a - b)));
                 return res;
             }
 
-            std::shared_ptr<Element> For(std::shared_ptr<Element> l, std::shared_ptr<Element> r)
-            {
-                /* early resolving */
-                ResolvingVisitor resolver;
-                r->Accept(&resolver);
+            std::shared_ptr<Element> Equal(Pack& p) { return nullptr; }
 
-                /* validating signature */
-                if (r->GetElementType() != Element::Type::Token ||
-                    ((Token&)*r).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+            std::shared_ptr<Element> NotEqual(Pack& p) { return nullptr; }
 
-                NumberToken& num = (NumberToken&)*r;
-                std::shared_ptr<Pack> res(new Pack);
-                int times = std::abs(atoi(num.content.c_str()));
-                for (size_t i = 0; i < times; i++)
-                    res->push_back(l->Clone());
-                return res;
-            }
+            std::shared_ptr<Element> Greater(Pack& p) { return nullptr; }
 
-            std::shared_ptr<Element> Equal(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> NotEqual(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> Greater(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> Less(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> GreaterOrEqual(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> LessOrEqual(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
-            std::shared_ptr<Element> Assign(std::shared_ptr<Element> l, std::shared_ptr<Element> r) { return nullptr; }
+            std::shared_ptr<Element> Less(Pack& p) { return nullptr; }
+
+            std::shared_ptr<Element> GreaterOrEqual(Pack& p) { return nullptr; }
+
+            std::shared_ptr<Element> LessOrEqual(Pack& p) { return nullptr; }
+
+            std::shared_ptr<Element> Assign(Pack& p) { return nullptr; }
         }
 
+        const FuncMap functions = {
+            { "operator_for", impl::For            },
+            { "operator_^",   impl::Power          },
+            { "operator_*",   impl::Multiply       },
+            { "operator_/",   impl::Divide         },
+            { "operator_%",   impl::Modulo         },
+            { "operator_+",   impl::Add            },
+            { "operator_-",   impl::Subtract       },
+            { "operator_==",  impl::Equal          },
+            { "operator_!=",  impl::NotEqual       },
+            { "operator_>",   impl::Greater        },
+            { "operator_<",   impl::Less           },
+            { "operator_>=",  impl::GreaterOrEqual },
+            { "operator_<=",  impl::LessOrEqual    },
+            { "operator_=",   impl::Assign         }
+        };
+
         const OptMap operators = {
-            { "for", { impl::For,            0,  true  } },
-            { "^",   { impl::Power,          1,  false } },
-            { "*",   { impl::Multiply,       2,  false } },
-            { "/",   { impl::Divide,         2,  false } },
-            { "%",   { impl::Modulo,         2,  false } },
-            { "+",   { impl::Add,            3,  false } },
-            { "-",   { impl::Subtract,       3,  false } },
-            { "==",  { impl::Equal,          4,  false } },
-            { "!=",  { impl::NotEqual,       4,  false } },
-            { ">",   { impl::Greater,        4,  false } },
-            { "<",   { impl::Less,           4,  false } },
-            { ">=",  { impl::GreaterOrEqual, 4,  false } },
-            { "<=",  { impl::LessOrEqual,    4,  false } },
-            { "=",   { impl::Assign,         5,  false } }
+            { "for", { nullptr, 0, true  } },
+            { "^",   { nullptr, 1, false } },
+            { "*",   { nullptr, 2, false } },
+            { "/",   { nullptr, 2, false } },
+            { "%",   { nullptr, 2, false } },
+            { "+",   { nullptr, 3, false } },
+            { "-",   { nullptr, 3, false } },
+            { "==",  { nullptr, 4, false } },
+            { "!=",  { nullptr, 4, false } },
+            { ">",   { nullptr, 4, false } },
+            { "<",   { nullptr, 4, false } },
+            { ">=",  { nullptr, 4, false } },
+            { "<=",  { nullptr, 4, false } },
+            { "=",   { nullptr, 5, false } }
         };
 
         const MacroMap macros = {
@@ -164,13 +204,21 @@ namespace rekt
             { "TIME", []() {
                 auto now = std::chrono::system_clock::now().time_since_epoch();
                 auto nano = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-                return std::make_shared<NumberToken>(std::to_string(nano)); } }
-        };
+                return std::make_shared<NumberToken>(std::to_string(nano)); } } };
     }
 
     Bindings::Bindings()
     {
+        functions = defaults::functions;
         operators = defaults::operators;
+        for (auto& f : functions)
+        {
+            if (f.first.rfind("operator_", 0) == 0)
+            {
+                std::string s = f.first.substr(9);
+                operators[s].processor = &functions[f.first];
+            }
+        }
         macros = defaults::macros;
     }
 }
