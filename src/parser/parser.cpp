@@ -78,7 +78,7 @@ namespace rekt
 
         if (res->size() == 1 &&
             (*res)[0]->GetElementType() == Element::Type::Token &&
-            ((Token*)((*res)[0].get()))->content == "")
+            ((Token*)((*res)[0].get()))->ToString() == "")
             res->pop_back();
 
         return std::make_pair(res, i);
@@ -88,12 +88,18 @@ namespace rekt
     {
         // null
         if (s == "" || s == "NULL")
-            return std::shared_ptr<Token>(new NullToken);
+            return std::make_shared<NullToken>();
+
+        // boolean
+        if (s == "true")
+            return std::make_shared<BooleanToken>(true);
+        else if (s == "false")
+            return std::make_shared<BooleanToken>(false);
 
         // operator
         auto opt = bindings.operators.find(s);
         if (opt != bindings.operators.end())
-            return std::shared_ptr<Token>(new OperatorToken(s, opt->second.processor, opt->second.isLazyProcessed));
+            return std::make_shared<OperatorToken>(s, opt->second.processor);
 
         // variable
         if (s[0] == '$' && s.size() > 1)
@@ -102,20 +108,20 @@ namespace rekt
             auto var = bindings.variables.find(varName);
             if (var == bindings.variables.end())
                 throw std::runtime_error("Parsing exception: an undeclared variable " + s + " was used.");
-            return std::shared_ptr<Token>(new VariableToken(varName, var->second));
+            return std::make_shared<VariableToken>(varName, var->second);
         }
 
         // macro
         auto macro = bindings.macros.find(s);
         if (macro != bindings.macros.end())
-            return std::shared_ptr<Token>(new MacroToken(s, &macro->second));
+            return std::make_shared<MacroToken>(s, &macro->second);
 
         // special string cases
         std::string lowercase(s);
         std::transform(s.begin(), s.end(), lowercase.begin(),
             [](char c) { return std::tolower(c); });
         if (lowercase == "inf" || lowercase == "nan")
-            return std::shared_ptr<Token>(new StringToken(s));
+            return std::make_shared<StringToken>(s);
 
         // number
         char* p;
@@ -123,17 +129,17 @@ namespace rekt
             throw std::runtime_error("Parsing exception: number value " + s + " is not valid.");
 
         if (!*p)
-            return std::shared_ptr<Token>(new NumberToken(s));
+            return std::make_shared<NumberToken>(strtod(s.c_str(), nullptr));
 
         // function
         auto func = bindings.functions.find(s);
         if (func != bindings.functions.end())
-            return std::shared_ptr<Token>(new FunctionToken(s, &func->second));
+            return std::make_shared<FunctionToken>(s, &func->second);
 
         // string
         std::string trimmed(s);
         for (size_t i = 0; i < trimmed.size(); i++)
             if (trimmed[i] == '\\') trimmed.erase(trimmed.begin() + i);
-        return std::shared_ptr<Token>(new StringToken(trimmed));
+        return std::make_shared<StringToken>(trimmed);
     }
 }

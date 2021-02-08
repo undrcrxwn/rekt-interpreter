@@ -22,6 +22,7 @@ namespace rekt
             virtual void Visit(Pack& p) = 0;
         };
 
+        virtual bool operator==(const Element& e) const;
         virtual Type GetElementType() const = 0;
         virtual void Accept(Visitor* v) = 0;
         virtual std::shared_ptr<Element> Clone() = 0;

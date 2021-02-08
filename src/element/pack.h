@@ -13,16 +13,10 @@ namespace rekt
     public:
         using std::vector<std::shared_ptr<Element>>::vector;
 
+        bool operator==(const Pack& p) const;
         Element::Type GetElementType() const override { return Element::Type::Pack; }
         void Accept(Visitor* v) override { v->Visit(*this); }
-        std::shared_ptr<Element> Clone() override
-        {
-            std::shared_ptr<Pack> res(new Pack);
-            for (std::shared_ptr<Element>& e : *this)
-                res->push_back(e->Clone());
-            return res;
-        }
-
+        std::shared_ptr<Element> Clone() override;
         std::ostream& Print(std::ostream& os = std::cout) const;
         std::string ToString() const override;
 

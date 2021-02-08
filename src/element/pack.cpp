@@ -7,6 +7,30 @@
 
 namespace rekt
 {
+    bool Pack::operator==(const Pack& p) const
+    {
+        if (size() == 0)
+            return p.size() == 0;
+
+        if (size() != p.size())
+            return false;
+
+        for (size_t i = 0; i < size(); i++)
+        {
+            if (*(*this)[i] != *p[i])
+                return false;
+        }
+        return true;
+    }
+
+    std::shared_ptr<Element> Pack::Clone()
+    {
+        std::shared_ptr<Pack> res(new Pack);
+        for (std::shared_ptr<Element>& e : *this)
+            res->push_back(e->Clone());
+        return res;
+    }
+
     std::ostream& Pack::Print(std::ostream& os) const
     {
         return *Print(os, 0).first;
@@ -52,10 +76,10 @@ namespace rekt
                     os << " ";
 
                 SetConsoleTextAttribute(hConsole, 112);
-                os << t->content;
+                os << t->ToString();
                 SetConsoleTextAttribute(hConsole, 7);
 
-                int offset = 25 - tab - t->content.size();
+                int offset = 25 - tab - t->ToString().size();
                 if (offset > 0)
                     os << std::setw(offset) << " ";
                 else
@@ -67,15 +91,17 @@ namespace rekt
                             "Operator",
                             "Variable",
                             "Macro",
+                            "Boolean",
                             "Number",
                             "Function",
                             "String"
                         })[size_t(t->GetTokenType())];
 
                 SetConsoleTextAttribute(hConsole, 8);
+
                 os << this << " / " << e.get() << "   ";
-                os << char(int(this) % ('A' - 'z') + 'A') << " ";
-                os << char(int(e.get()) % ('A' - 'z') + 'A');
+                os << char(std::abs(int(this))    % ('A' - 'z') + 'A') << " ";
+                os << char(std::abs(int(e.get())) % ('A' - 'z') + 'A');
                 SetConsoleTextAttribute(hConsole, 7);
 
                 os << "\n";

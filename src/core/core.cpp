@@ -49,15 +49,15 @@ namespace rekt
                 if (i == 0 || i == p.size() - 1)
                     throw std::runtime_error("Choppig exception: unsupported operator signature.");
 
-                if (std::find(optGroup.begin(), optGroup.end(), t.content) == optGroup.end())
+                OperatorToken& ot = (OperatorToken&)t;
+                if (std::find(optGroup.begin(), optGroup.end(), ot.content) == optGroup.end())
                     continue;
 
                 p[i - 1]->Accept(this);
                 p[i + 1]->Accept(this);
 
-                OperatorToken& opt = (OperatorToken&)t;
                 Pack args = { p[i - 1], p[i + 1] };
-                p[i - 1] = std::shared_ptr<Element>(new FunctionToken("operator_" + t.content, opt.processor, args));
+                p[i - 1] = std::shared_ptr<Element>(new FunctionToken("operator_" + ot.content, ot.processor, args));
 
                 p.erase(p.begin() + i, p.begin() + i + 2);
                 std::cout << "OPT PACKED\n";
