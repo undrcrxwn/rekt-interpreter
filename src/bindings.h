@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <utility>
+#include <boost/optional.hpp>
 
 namespace rekt
 {
@@ -11,7 +12,7 @@ namespace rekt
     class Token;
     class Pack;
 
-    typedef std::function<std::shared_ptr<Element>(Pack&)> FuncProcessor;
+    typedef std::function<boost::optional<std::shared_ptr<Element>>(Pack&)> FuncProcessor;
 
     class OptInfo
     {
@@ -21,14 +22,13 @@ namespace rekt
         bool isLazyProcessed;
     };
 
-    typedef std::map<std::string, FuncProcessor> FuncMap;
-    typedef std::map<std::string, OptInfo> OptMap;
-    typedef std::map<std::string, std::shared_ptr<Token>> VarMap;
-    typedef std::map<std::string, std::function<std::shared_ptr<Element>()>> MacroMap;
+    typedef std::unordered_map<std::string, FuncProcessor> FuncMap;
+    typedef std::unordered_map<std::string, OptInfo> OptMap;
+    typedef std::unordered_map<std::string, std::shared_ptr<Token>> VarMap;
+    typedef std::unordered_map<std::string, std::function<std::shared_ptr<Element>()>> MacroMap;
 
-    class Bindings
+    struct Bindings
     {
-    public:
         OptMap operators;
         FuncMap functions;
         VarMap variables;

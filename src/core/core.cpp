@@ -73,7 +73,10 @@ namespace rekt
     {
         Element::Type type = e->GetElementType();
         if (type == Element::Type::Token)
-            e = ((Token&)*e).Process();
+        {
+            auto res = ((Token&)*e).Process();
+            if (res) e = res.value();
+        }
         else if (type == Element::Type::Pack)
             Process((Pack&)*e);
 
@@ -83,10 +86,15 @@ namespace rekt
 
     void Core::Process(Pack& p)
     {
-        for (std::shared_ptr<Element>& e : p)
+        for (size_t i = 0; i < p.size(); i++)
         {
+            std::shared_ptr<Element>& e = p[i];
             if (e->GetElementType() == Element::Type::Token)
-                e = ((Token&)*e).Process();
+            {
+                auto res = ((Token&)*e).Process();
+                if (res) e = res.value();
+                else p.erase(p.begin() + i--);
+            }
             else
                 Process(e);
         }

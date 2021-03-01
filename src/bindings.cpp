@@ -3,7 +3,9 @@
 #include "element/pack.h"
 #include "core/core.h"
 #include <chrono>
+#include <thread>
 #include <math.h>
+#include <boost/optional.hpp>
 
 namespace rekt
 {
@@ -11,11 +13,11 @@ namespace rekt
     {
         namespace impl
         {
-            std::shared_ptr<Element> For(Pack& p)
+            boost::optional<std::shared_ptr<Element>> For(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() != 2) throw WrongSignatureException();
 
                 /* early processing */
                 Core::Process(p[1]);
@@ -23,206 +25,212 @@ namespace rekt
                 /* validating signature */
                 if (p[1]->GetElementType() != Element::Type::Token ||
                     ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                    throw WrongSignatureException();
 
                 std::shared_ptr<Pack> res(new Pack);
                 int times = std::abs(((NumberToken&)*p[1]).value);
                 for (size_t i = 0; i < times; i++)
                     res->push_back(p[0]->Clone());
-                return res;
+                return std::static_pointer_cast<Element>(res);
             }
 
-            std::shared_ptr<Element> Power(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Power(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 /* validating signature */
-                if (p[0]->GetElementType() != Element::Type::Token ||
-                    p[1]->GetElementType() != Element::Type::Token ||
-                    ((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (e->GetElementType() != Element::Type::Token ||
+                        ((Token&)*e).GetTokenType() != Token::Type::Number)
+                        throw WrongSignatureException();
 
-                double a = ((NumberToken&)*p[0]).value;
-                double b = ((NumberToken&)*p[1]).value;
-                return std::make_shared<NumberToken>(std::pow(a, b));
+                double res = ((NumberToken&)*p[0]).value;
+                for (size_t i = 1; i < p.size(); i++)
+                    res = std::pow(res, ((NumberToken&)*p[i]).value);
+                return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            std::shared_ptr<Element> Multiply(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Multiply(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 if (p[0]->GetElementType() == Element::Type::Token)
                 {
                     /* validating signature */
                     if (p[1]->GetElementType() != Element::Type::Token)
-                        throw std::runtime_error("Processing error: unsupported signature.");
+                        throw WrongSignatureException();
 
-                    p[0] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[0], false);
-                    p[1] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[1], false);
+                    for (std::shared_ptr<Element>& e : p)
+                        e = Convert<Token::Type::Number>(std::static_pointer_cast<Token>(e), false);
 
-                    if (((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
-                        ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                        throw std::runtime_error("Processing error: unsupported signature.");
+                    for (std::shared_ptr<Element>& e : p)
+                        if (((Token&)*e).GetTokenType() != Token::Type::Number)
+                            throw WrongSignatureException();
 
-                    double a = ((NumberToken&)*p[0]).value;
-                    double b = ((NumberToken&)*p[1]).value;
-                    return std::make_shared<NumberToken>(a * b);
+                    double res = 1;
+                    for (std::shared_ptr<Element>& e : p)
+                        res *= ((NumberToken&)*e).value;
+                    return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
                 }
                 else if (p[0]->GetElementType() == Element::Type::Pack)
                 {
                     /* validating signature */
                     if (p[1]->GetElementType() != Element::Type::Token ||
                         ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                        throw std::runtime_error("Processing error: unsupported signature.");
+                        throw WrongSignatureException();
 
                     Pack args = { p[0], p[1] };
                     return For(args);
                 }
                 else
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                    throw WrongSignatureException();
             }
 
-            std::shared_ptr<Element> Divide(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Divide(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 /* validating signature */
-                if (p[0]->GetElementType() != Element::Type::Token ||
-                    p[1]->GetElementType() != Element::Type::Token)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (e->GetElementType() != Element::Type::Token)
+                        throw WrongSignatureException();
 
-                p[0] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[0], false);
-                p[1] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[1], false);
+                for (std::shared_ptr<Element>& e : p)
+                    e = Convert<Token::Type::Number>(std::static_pointer_cast<Token>(e), false);
 
-                if (((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (((Token&)*e).GetTokenType() != Token::Type::Number)
+                        throw WrongSignatureException();
 
-                double a = ((NumberToken&)*p[0]).value;
-                double b = ((NumberToken&)*p[1]).value;
-                return std::make_shared<NumberToken>(a / b);
+                double res = ((NumberToken&)*p[0]).value;
+                for (size_t i = 1; i < p.size(); i++)
+                    res /= ((NumberToken&)*p[i]).value;
+                return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            std::shared_ptr<Element> Modulo(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Modulo(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 /* validating signature */
-                if (p[0]->GetElementType() != Element::Type::Token ||
-                    p[1]->GetElementType() != Element::Type::Token)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (e->GetElementType() != Element::Type::Token)
+                        throw WrongSignatureException();
 
-                p[0] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[0], false);
-                p[1] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[1], false);
+                for (std::shared_ptr<Element>& e : p)
+                    e = Convert<Token::Type::Number>(std::static_pointer_cast<Token>(e), false);
 
-                if (((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (((Token&)*e).GetTokenType() != Token::Type::Number)
+                        throw WrongSignatureException();
 
-                double a = ((NumberToken&)*p[0]).value;
-                double b = ((NumberToken&)*p[1]).value;
-                return std::make_shared<NumberToken>(std::fmod(a, b));
+                double res = ((NumberToken&)*p[0]).value;
+                for (size_t i = 1; i < p.size(); i++)
+                    res = std::fmod(res, ((NumberToken&)*p[i]).value);
+                return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            std::shared_ptr<Element> Add(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Add(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 /* validating signature */
-                if (p[0]->GetElementType() != Element::Type::Token ||
-                    p[1]->GetElementType() != Element::Type::Token)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (e->GetElementType() != Element::Type::Token)
+                        throw WrongSignatureException();
 
                 try
                 {
-                    p[0] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[0], false);
-                    p[1] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[1], false);
+                    for (std::shared_ptr<Element>& e : p)
+                        e = Convert<Token::Type::Number>(std::static_pointer_cast<Token>(e), false);
                 }
                 catch (std::exception&)
                 {
                     try
                     {
-                        p[0] = Convert<Token::Type::String>((std::shared_ptr<Token>&)p[0], true);
-                        p[1] = Convert<Token::Type::String>((std::shared_ptr<Token>&)p[1], true);
+                        for (std::shared_ptr<Element>& e : p)
+                            e = Convert<Token::Type::String>(std::static_pointer_cast<Token>(e), true);
                     }
                     catch (std::exception&)
                     {
-                        throw std::runtime_error("Processing error: unsupported signature.");
+                        throw WrongSignatureException();
                     }
 
-                    std::string& a = ((StringToken&)*p[0]).content;
-                    std::string& b = ((StringToken&)*p[1]).content;
-                    return std::make_shared<StringToken>(a + b);
+                    std::string res;
+                    for (std::shared_ptr<Element>& e : p)
+                        res += ((StringToken&)*e).content;
+                    return std::static_pointer_cast<Element>(std::make_shared<StringToken>(res));
                 }
 
-                double a = ((NumberToken&)*p[0]).value;
-                double b = ((NumberToken&)*p[1]).value;
-                return std::make_shared<NumberToken>(a + b);
+                double res = 0;
+                for (std::shared_ptr<Element>& e : p)
+                    res += ((NumberToken&)*e).value;
+                return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            std::shared_ptr<Element> Subtract(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Subtract(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() != 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
-                Core::Process(p[0]);
-                Core::Process(p[1]);
+                for (std::shared_ptr<Element>& e : p)
+                    Core::Process(e);
 
                 /* validating signature */
-                if (p[0]->GetElementType() != Element::Type::Token ||
-                    p[1]->GetElementType() != Element::Type::Token)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (e->GetElementType() != Element::Type::Token)
+                        throw WrongSignatureException();
 
-                p[0] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[0], false);
-                p[1] = Convert<Token::Type::Number>((std::shared_ptr<Token>&)p[1], false);
+                for (std::shared_ptr<Element>& e : p)
+                    e = Convert<Token::Type::Number>(std::static_pointer_cast<Token>(e), false);
 
-                if (((Token&)*p[0]).GetTokenType() != Token::Type::Number ||
-                    ((Token&)*p[1]).GetTokenType() != Token::Type::Number)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                for (std::shared_ptr<Element>& e : p)
+                    if (((Token&)*e).GetTokenType() != Token::Type::Number)
+                        throw WrongSignatureException();
 
-                double a = ((NumberToken&)*p[0]).value;
-                double b = ((NumberToken&)*p[1]).value;
-                return std::make_shared<NumberToken>(a - b);
+                double res = ((NumberToken&)*p[0]).value;
+                for (size_t i = 1; i < p.size(); i++)
+                    res -= ((NumberToken&)*p[i]).value;
+                return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            std::shared_ptr<Element> Equal(Pack& p)
+            boost::optional<std::shared_ptr<Element>> Equal(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() < 2)
-                    throw std::runtime_error("Processing error: unsupported signature.");
+                if (p.size() == 0) return boost::none;
+                if (p.size() != 2) throw WrongSignatureException();
 
                 /* early processing */
                 for (std::shared_ptr<Element>& e : p)
@@ -237,26 +245,40 @@ namespace rekt
                         break;
                     }
                 }
-
-                return std::make_shared<BooleanToken>(res);
+                return std::static_pointer_cast<Element>(std::make_shared<BooleanToken>(res));
             }
 
-            std::shared_ptr<Element> NotEqual(Pack& p)
+            boost::optional<std::shared_ptr<Element>> NotEqual(Pack& p)
             {
-                return std::make_shared<BooleanToken>(!((BooleanToken&)Equal(p)).value);
+                return std::static_pointer_cast<Element>(std::make_shared<BooleanToken>(!((BooleanToken&)Equal(p)).value));
             }
 
-            std::shared_ptr<Element> Greater(Pack& p) { return nullptr; }
+            boost::optional<std::shared_ptr<Element>> Greater(Pack& p) { return boost::none; }
 
-            std::shared_ptr<Element> Less(Pack& p) { return nullptr; }
+            boost::optional<std::shared_ptr<Element>> Less(Pack& p) { return boost::none; }
 
-            std::shared_ptr<Element> GreaterOrEqual(Pack& p) { return nullptr; }
+            boost::optional<std::shared_ptr<Element>> GreaterOrEqual(Pack& p) { return boost::none; }
 
-            std::shared_ptr<Element> LessOrEqual(Pack& p) { return nullptr; }
+            boost::optional<std::shared_ptr<Element>> LessOrEqual(Pack& p) { return boost::none; }
 
-            std::shared_ptr<Element> Assign(Pack& p) { return nullptr; }
+            boost::optional<std::shared_ptr<Element>> Assign(Pack& p) { return boost::none; }
 
-            std::shared_ptr<Element> Exit(Pack& p) { exit(EXIT_SUCCESS); }
+            boost::optional<std::shared_ptr<Element>> Exit(Pack& p) { exit(EXIT_SUCCESS); }
+
+            boost::optional<std::shared_ptr<Element>> DoSomething(Pack& p)
+            {
+                std::vector<std::string> answers({
+                    "Hunting unicorns...",
+                    "Hacking the CIA...",
+                    "Launching WannaCry...",
+                    "Shorting BTC...",
+                    "Saving humanity...",
+                    "Creating new JS framework...",
+                    "Nuking Mars..." });
+                std::cout << answers[rand() % answers.size()] << "\n";
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                return boost::none;
+            }
         }
 
         const FuncMap functions = {
@@ -275,7 +297,8 @@ namespace rekt
             { "operator_<=",  impl::LessOrEqual    },
             { "operator_=",   impl::Assign         },
 
-            { "exit",         impl::Exit           }
+            { "exit",         impl::Exit           },
+            { "do_something", impl::DoSomething    }
         };
 
         const OptMap operators = {

@@ -10,14 +10,14 @@ namespace rekt
     class Element : public std::enable_shared_from_this<Element>
     {
     public:
-        enum class Type
+        enum class Type : std::uint8_t
         {
             Token,
             Pack
         };
 
-        class Visitor {
-        public:
+        struct Visitor
+        {
             virtual void Visit(Token& t) = 0;
             virtual void Visit(Pack& p) = 0;
         };

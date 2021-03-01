@@ -85,20 +85,9 @@ namespace rekt
                 else
                     os << "\t";
 
-                os << std::setw(15) << std::left <<
-                    std::vector<std::string>({
-                            "Null",
-                            "Operator",
-                            "Variable",
-                            "Macro",
-                            "Boolean",
-                            "Number",
-                            "Function",
-                            "String"
-                        })[size_t(t->GetTokenType())];
+                os << std::setw(15) << std::left << utils::GetTokenTypeName(*t);
 
                 SetConsoleTextAttribute(hConsole, 8);
-
                 os << this << " / " << e.get() << "   ";
                 os << char(std::abs(int(this))    % ('A' - 'z') + 'A') << " ";
                 os << char(std::abs(int(e.get())) % ('A' - 'z') + 'A');

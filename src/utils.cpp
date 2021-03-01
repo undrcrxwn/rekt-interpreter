@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "element/token.h"
 
 namespace rekt
 {
@@ -32,6 +33,26 @@ namespace rekt
             if (s.rfind("operator_", 0) == 0)
                 return s.substr(9, s.size() - 8);
             return s;
+        }
+
+        std::string GetElementTypeName(Element& e)
+        {
+            return std::vector<std::string>({
+                "Token",
+                "Pack" })[(std::uint8_t)e.GetElementType()];
+        }
+
+        std::string GetTokenTypeName(Token& t)
+        {
+            return std::vector<std::string>({
+                "Null",
+                "Operator",
+                "Variable",
+                "Macro",
+                "Boolean",
+                "Number",
+                "Function",
+                "String" })[(std::uint8_t)t.GetTokenType()];
         }
     }
 }

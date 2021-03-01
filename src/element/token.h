@@ -3,6 +3,7 @@
 #include "../bindings.h"
 #include "pack.h"
 #include "../utils.h"
+#include "../exception.h"
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -13,7 +14,8 @@ namespace rekt
     class Token : public Element
     {
     public:
-        enum class Type {
+        enum class Type : std::uint8_t
+        {
             Null,
             Operator,
             Variable,
@@ -29,7 +31,7 @@ namespace rekt
         void Accept(Visitor* v) override { v->Visit(*this); }
         virtual Token::Type GetTokenType() const = 0;
 
-        virtual std::shared_ptr<Element> Process() { return shared_from_this(); }
+        virtual boost::optional<std::shared_ptr<Element>> Process() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Resolve() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Clone() override = 0;
         virtual std::string ToString() const override = 0;
@@ -122,7 +124,7 @@ namespace rekt
         bool operator==(const Token& t) const override;
         Token::Type GetTokenType() const override { return Token::Type::Function; }
         std::shared_ptr<Element> Clone() override { return std::make_shared<FunctionToken>(content, processor, (Pack&)*arguments.Clone()); }
-        std::shared_ptr<Element> Process() override;
+        boost::optional<std::shared_ptr<Element>> Process() override;
         std::shared_ptr<Element> Resolve() override;
     };
 
@@ -157,7 +159,7 @@ namespace rekt
         if (explicitly)
             return std::make_shared<NullToken>();
 
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Null.");
     }
 
     template<>
@@ -172,7 +174,7 @@ namespace rekt
                 utils::RemoveFuncNameDecorations(((FunctionToken&)*t).content),
                 ((FunctionToken&)*t).processor);
         }
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Operator.");
     }
 
     template<>
@@ -198,7 +200,7 @@ namespace rekt
             else
                 return std::make_shared<BooleanToken>(((StringToken&)*t).content != "");
         }
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Boolean.");
     }
 
     template<>
@@ -223,7 +225,7 @@ namespace rekt
             }
         }
 
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Number.");
     }
 
     template<>
@@ -238,7 +240,7 @@ namespace rekt
                 utils::AddFuncNameDecorations(((OperatorToken&)*t).content),
                 ((OperatorToken&)*t).processor);
         }
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Function.");
     }
 
     template<>
@@ -261,6 +263,6 @@ namespace rekt
             }
         }
 
-        throw std::runtime_error("Invalid conversion.");
+        throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to String.");
     }
 }

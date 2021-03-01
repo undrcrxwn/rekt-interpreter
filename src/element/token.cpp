@@ -1,6 +1,8 @@
 #include "token.h"
 #include "../core/core.h"
 #include "pack.h"
+#include "../exception.h"
+#include <string>
 
 namespace rekt
 {
@@ -9,8 +11,8 @@ namespace rekt
         std::shared_ptr<Element> resolved = (*resolver)();
 
         static size_t iterations = 0;
-        if (iterations >= MaxRecursionDepth)
-            throw std::runtime_error("Maximum recursion depth exceeded.");
+        if (iterations > MaxRecursionDepth)
+            throw MaximumRecursionDepthException("Attempts: " + std::to_string(iterations) + " > " + std::to_string(MaxRecursionDepth) + ".");
 
         iterations++;
         Core::Resolve(resolved);
@@ -19,13 +21,11 @@ namespace rekt
         return resolved;
     }
 
-    std::shared_ptr<Element> FunctionToken::Process()
+    boost::optional<std::shared_ptr<Element>> FunctionToken::Process()
     {
-        if (arguments.size() == 0)
-            return shared_from_this();
-
-        std::shared_ptr<Element> res = (*processor)(arguments);
-        Core::Process(res);
+        auto res = (*processor)(arguments);
+        if (!res) return boost::none;
+        Core::Process(res.value());
         return res;
     }
 

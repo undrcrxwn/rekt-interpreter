@@ -24,16 +24,14 @@ namespace rekt
 
             if (isForcedString)
             {
-                if (s[i] == '"')
-                    isForcedString = !isForcedString;
-                else
-                    lastContent += s[i];
+                if (s[i] == '"') isForcedString = !isForcedString;
+                else lastContent += s[i];
                 continue;
             }
 
             if (s[i] == ' ')
             {
-                if (lastContent != "")
+                if (!lastContent.empty())
                 {
                     res->push_back(ParseToken(lastContent));
                     lastContent = "";
@@ -43,7 +41,7 @@ namespace rekt
                 isForcedString = !isForcedString;
             else if (s[i] == '(')
             {
-                if (lastContent != "")
+                if (!lastContent.empty())
                 {
                     res->push_back(ParseToken(lastContent));
                     lastContent = "";
@@ -52,8 +50,7 @@ namespace rekt
                 auto [p, lastIdx] = Parse(s, i + 1);
                 i = lastIdx;
 
-                if (p->size() > 0 &&
-                    res->size() > 0 &&
+                if (p->size() > 0 && res->size() > 0 &&
                     res->back()->GetElementType() == Element::Type::Token &&
                     ((Token&)*res->back()).GetTokenType() == Token::Type::Function)
                     ((FunctionToken&)*res->back()).arguments = *p;
@@ -62,7 +59,7 @@ namespace rekt
             }
             else if (s[i] == ')')
             {
-                if (lastContent != "")
+                if (!lastContent.empty())
                 {
                     res->push_back(ParseToken(lastContent));
                     lastContent = "";
@@ -73,12 +70,12 @@ namespace rekt
                 lastContent += s[i];
         }
 
-        if (lastContent != "")
+        if (!lastContent.empty())
             res->push_back(ParseToken(lastContent));
 
         if (res->size() == 1 &&
             (*res)[0]->GetElementType() == Element::Type::Token &&
-            ((Token*)((*res)[0].get()))->ToString() == "")
+            ((Token*)((*res)[0].get()))->ToString().empty())
             res->pop_back();
 
         return std::make_pair(res, i);
@@ -91,10 +88,8 @@ namespace rekt
             return std::make_shared<NullToken>();
 
         // boolean
-        if (s == "true")
-            return std::make_shared<BooleanToken>(true);
-        else if (s == "false")
-            return std::make_shared<BooleanToken>(false);
+        if (s == "true")       return std::make_shared<BooleanToken>(true);
+        else if (s == "false") return std::make_shared<BooleanToken>(false);
 
         // operator
         auto opt = bindings.operators.find(s);
@@ -127,7 +122,6 @@ namespace rekt
         char* p;
         if (std::isinf(strtod(s.c_str(), &p)))
             throw std::runtime_error("Parsing exception: number value " + s + " is not valid.");
-
         if (!*p)
             return std::make_shared<NumberToken>(strtod(s.c_str(), nullptr));
 
