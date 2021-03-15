@@ -163,6 +163,7 @@
     <ClInclude Include="src\bindings.h" />
     <ClInclude Include="src\element\token.h" />
     <ClInclude Include="src\utils.h" />
+    <ClInclude Include="src\element\issue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

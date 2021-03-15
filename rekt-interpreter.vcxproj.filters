@@ -63,5 +63,8 @@
     <ClInclude Include="src\exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\element\issue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

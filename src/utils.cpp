@@ -39,20 +39,22 @@ namespace rekt
         {
             return std::vector<std::string>({
                 "Token",
-                "Pack" })[(std::uint8_t)e.GetElementType()];
+                "Pack" })[(size_t)e.GetElementType()];
         }
 
         std::string GetTokenTypeName(Token& t)
         {
             return std::vector<std::string>({
                 "Null",
+                "Undefined",
                 "Operator",
                 "Variable",
                 "Macro",
                 "Boolean",
                 "Number",
                 "Function",
-                "String" })[(std::uint8_t)t.GetTokenType()];
+                "String",
+                "Bracket" })[(size_t)t.GetTokenType()];
         }
     }
 }

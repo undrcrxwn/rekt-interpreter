@@ -1,29 +1,33 @@
 ﻿#pragma once
 #include "element.h"
-#include "../bindings.h"
 #include "pack.h"
+#include "issue.h"
+#include "../bindings.h"
 #include "../utils.h"
 #include "../exception.h"
 #include <string>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <optional>
 
 namespace rekt
 {
     class Token : public Element
     {
     public:
-        enum class Type : std::uint8_t
+        enum class Type
         {
             Null,
+            Undefined,
             Operator,
             Variable,
             Macro,
             Boolean,
             Number,
             Function,
-            String
+            String,
+            Bracket
         };
 
         virtual bool operator==(const Token& t) const { return GetTokenType() == t.GetTokenType(); }
@@ -31,7 +35,7 @@ namespace rekt
         void Accept(Visitor* v) override { v->Visit(*this); }
         virtual Token::Type GetTokenType() const = 0;
 
-        virtual boost::optional<std::shared_ptr<Element>> Process() { return shared_from_this(); }
+        virtual std::optional<std::shared_ptr<Element>> Process() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Resolve() { return shared_from_this(); }
         virtual std::shared_ptr<Element> Clone() override = 0;
         virtual std::string ToString() const override = 0;
@@ -44,10 +48,11 @@ namespace rekt
     {
     public:
         std::string content;
-
-        StringValueBasedToken(const std::string& c) : content(c) {}
         bool operator==(const Token& t) const override;
         std::string ToString() const override { return content; }
+
+    protected:
+        StringValueBasedToken(const std::string& c) : content(c) {}
     };
 
     class NullToken : public Token
@@ -56,6 +61,16 @@ namespace rekt
         Token::Type GetTokenType() const override { return Token::Type::Null; }
         std::shared_ptr<Element> Clone() override { return std::make_shared<NullToken>(*this); }
         std::string ToString() const override { return ""; }
+    };
+
+    class UndefinedToken : public StringValueBasedToken
+    {
+    public:
+        UndefinedToken(const std::string& c = "") : StringValueBasedToken(c) {}
+        UndefinedToken(const std::string& c, std::shared_ptr<Issue> issue) : StringValueBasedToken(c) { issues.push_back(issue); }
+
+        Token::Type GetTokenType() const override { return Token::Type::Undefined; }
+        std::shared_ptr<Element> Clone() override { return std::make_shared<UndefinedToken>(*this); }
     };
 
     class OperatorToken : public StringValueBasedToken
@@ -124,7 +139,7 @@ namespace rekt
         bool operator==(const Token& t) const override;
         Token::Type GetTokenType() const override { return Token::Type::Function; }
         std::shared_ptr<Element> Clone() override { return std::make_shared<FunctionToken>(content, processor, (Pack&)*arguments.Clone()); }
-        boost::optional<std::shared_ptr<Element>> Process() override;
+        std::optional<std::shared_ptr<Element>> Process() override;
         std::shared_ptr<Element> Resolve() override;
     };
 
@@ -134,6 +149,48 @@ namespace rekt
         StringToken(const std::string& c) : StringValueBasedToken(c) {}
         Token::Type GetTokenType() const override { return Token::Type::String; }
         std::shared_ptr<Element> Clone() override { return std::make_shared<StringToken>(*this); }
+    };
+
+    class BracketToken : public Token
+    {
+    public:
+        enum class Type
+        {
+            Round,
+            Square,
+            Curly
+        };
+
+        BracketToken::Type type;
+        bool isOpening;
+
+        BracketToken(char c)
+        {
+            switch (c)
+            {
+            case '(': type = BracketToken::Type::Round;  isOpening = true;  break;
+            case ')': type = BracketToken::Type::Round;  isOpening = false; break;
+            case '[': type = BracketToken::Type::Square; isOpening = true;  break;
+            case ']': type = BracketToken::Type::Square; isOpening = false; break;
+            case '{': type = BracketToken::Type::Curly;  isOpening = true;  break;
+            case '}': type = BracketToken::Type::Curly;  isOpening = false; break;
+            default: throw std::exception();
+            }
+        }
+
+        Token::Type GetTokenType() const override { return Token::Type::Bracket; }
+        std::shared_ptr<Element> Clone() override { return std::make_shared<BracketToken>(*this); }
+        
+        std::string ToString() const override
+        {
+            switch (type)
+            {
+            case BracketToken::Type::Round:  return isOpening ? "(" : ")";
+            case BracketToken::Type::Square: return isOpening ? "[" : "]";
+            case BracketToken::Type::Curly:  return isOpening ? "{" : "}";
+            default: throw std::exception();
+            }
+        }
     };
 
     template<Token::Type>
@@ -174,6 +231,7 @@ namespace rekt
                 utils::RemoveFuncNameDecorations(((FunctionToken&)*t).content),
                 ((FunctionToken&)*t).processor);
         }
+
         throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Operator.");
     }
 
@@ -200,6 +258,7 @@ namespace rekt
             else
                 return std::make_shared<BooleanToken>(((StringToken&)*t).content != "");
         }
+
         throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Boolean.");
     }
 
@@ -240,6 +299,7 @@ namespace rekt
                 utils::AddFuncNameDecorations(((OperatorToken&)*t).content),
                 ((OperatorToken&)*t).processor);
         }
+
         throw InvalidConversionException("Cannot convert " + utils::GetTokenTypeName(*t) + " to Function.");
     }
 

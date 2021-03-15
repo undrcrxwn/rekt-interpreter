@@ -89,9 +89,13 @@ namespace rekt
 
                 SetConsoleTextAttribute(hConsole, 8);
                 os << this << " / " << e.get() << "   ";
-                os << char(std::abs(int(this))    % ('A' - 'z') + 'A') << " ";
+                os << char(std::abs(int(this)) % ('A' - 'z') + 'A') << " ";
                 os << char(std::abs(int(e.get())) % ('A' - 'z') + 'A');
                 SetConsoleTextAttribute(hConsole, 7);
+
+                os << "\t";
+                for (auto& issue : e->issues)
+                    os << issue->Get().title << (&issue == &e->issues.back() ? "" : ", ");
 
                 os << "\n";
 

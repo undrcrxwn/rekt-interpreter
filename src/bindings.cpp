@@ -6,6 +6,7 @@
 #include <thread>
 #include <math.h>
 #include <boost/optional.hpp>
+#include <optional>
 
 namespace rekt
 {
@@ -13,10 +14,10 @@ namespace rekt
     {
         namespace impl
         {
-            boost::optional<std::shared_ptr<Element>> For(Pack& p)
+            std::optional<std::shared_ptr<Element>> For(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() != 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -28,16 +29,16 @@ namespace rekt
                     throw WrongSignatureException();
 
                 std::shared_ptr<Pack> res(new Pack);
-                int times = std::abs(((NumberToken&)*p[1]).value);
+                double times = std::abs(((NumberToken&)*p[1]).value);
                 for (size_t i = 0; i < times; i++)
                     res->push_back(p[0]->Clone());
                 return std::static_pointer_cast<Element>(res);
             }
 
-            boost::optional<std::shared_ptr<Element>> Power(Pack& p)
+            std::optional<std::shared_ptr<Element>> Power(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -56,10 +57,10 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> Multiply(Pack& p)
+            std::optional<std::shared_ptr<Element>> Multiply(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -98,10 +99,10 @@ namespace rekt
                     throw WrongSignatureException();
             }
 
-            boost::optional<std::shared_ptr<Element>> Divide(Pack& p)
+            std::optional<std::shared_ptr<Element>> Divide(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -126,10 +127,10 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> Modulo(Pack& p)
+            std::optional<std::shared_ptr<Element>> Modulo(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -154,10 +155,10 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> Add(Pack& p)
+            std::optional<std::shared_ptr<Element>> Add(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -198,10 +199,10 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> Subtract(Pack& p)
+            std::optional<std::shared_ptr<Element>> Subtract(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() < 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -226,10 +227,10 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<NumberToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> Equal(Pack& p)
+            std::optional<std::shared_ptr<Element>> Equal(Pack& p)
             {
                 /* validating arguments amount */
-                if (p.size() == 0) return boost::none;
+                if (p.size() == 0) return std::nullopt;
                 if (p.size() != 2) throw WrongSignatureException();
 
                 /* early processing */
@@ -248,24 +249,24 @@ namespace rekt
                 return std::static_pointer_cast<Element>(std::make_shared<BooleanToken>(res));
             }
 
-            boost::optional<std::shared_ptr<Element>> NotEqual(Pack& p)
+            std::optional<std::shared_ptr<Element>> NotEqual(Pack& p)
             {
                 return std::static_pointer_cast<Element>(std::make_shared<BooleanToken>(!((BooleanToken&)Equal(p)).value));
             }
 
-            boost::optional<std::shared_ptr<Element>> Greater(Pack& p) { return boost::none; }
+            std::optional<std::shared_ptr<Element>> Greater(Pack& p) { return std::nullopt; }
 
-            boost::optional<std::shared_ptr<Element>> Less(Pack& p) { return boost::none; }
+            std::optional<std::shared_ptr<Element>> Less(Pack& p) { return std::nullopt; }
 
-            boost::optional<std::shared_ptr<Element>> GreaterOrEqual(Pack& p) { return boost::none; }
+            std::optional<std::shared_ptr<Element>> GreaterOrEqual(Pack& p) { return std::nullopt; }
 
-            boost::optional<std::shared_ptr<Element>> LessOrEqual(Pack& p) { return boost::none; }
+            std::optional<std::shared_ptr<Element>> LessOrEqual(Pack& p) { return std::nullopt; }
 
-            boost::optional<std::shared_ptr<Element>> Assign(Pack& p) { return boost::none; }
+            std::optional<std::shared_ptr<Element>> Assign(Pack& p) { return std::nullopt; }
 
-            boost::optional<std::shared_ptr<Element>> Exit(Pack& p) { exit(EXIT_SUCCESS); }
+            std::optional<std::shared_ptr<Element>> Exit(Pack& p) { exit(EXIT_SUCCESS); }
 
-            boost::optional<std::shared_ptr<Element>> DoSomething(Pack& p)
+            std::optional<std::shared_ptr<Element>> DoSomething(Pack& p)
             {
                 std::vector<std::string> answers({
                     "Hunting unicorns...",
@@ -277,7 +278,7 @@ namespace rekt
                     "Nuking Mars..." });
                 std::cout << answers[rand() % answers.size()] << "\n";
                 std::this_thread::sleep_for(std::chrono::seconds(1));
-                return boost::none;
+                return std::nullopt;
             }
         }
 
@@ -338,7 +339,7 @@ namespace rekt
             if (f.first.rfind("operator_", 0) == 0)
             {
                 std::string s = f.first.substr(9);
-                operators[s].processor = &functions[f.first];
+                operators.find(s)->second.processor = &functions[f.first];
             }
         }
 

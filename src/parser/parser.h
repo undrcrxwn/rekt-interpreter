@@ -18,7 +18,8 @@ namespace rekt
         std::shared_ptr<Pack> Parse(const std::string& s);
 
     private:
-        std::pair<std::shared_ptr<Pack>, size_t> Parse(const std::string& s, size_t i);
-        std::shared_ptr<Token> ParseToken(const std::string& s);
+        Pack SplitInWords(const std::string& s);
+        Pack SplitByOperators(const std::string& s);
+        std::shared_ptr<Token> Tokenize(const std::string& s);
     };
 }

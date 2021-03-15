@@ -1,6 +1,8 @@
 ﻿#pragma once
+#include "issue.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace rekt
 {
@@ -10,7 +12,7 @@ namespace rekt
     class Element : public std::enable_shared_from_this<Element>
     {
     public:
-        enum class Type : std::uint8_t
+        enum class Type
         {
             Token,
             Pack
@@ -21,6 +23,8 @@ namespace rekt
             virtual void Visit(Token& t) = 0;
             virtual void Visit(Pack& p) = 0;
         };
+
+        std::vector<std::shared_ptr<Issue>> issues;
 
         virtual bool operator==(const Element& e) const;
         virtual Type GetElementType() const = 0;

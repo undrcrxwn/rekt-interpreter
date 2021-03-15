@@ -2,24 +2,18 @@
 #include "src/element/pack.h"
 #include "src/parser/parser.h"
 #include "src/core/core.h"
-#include "src/bindings.h"   
+#include "src/bindings.h"
 
 int main()
 {
-    srand(time(0));
+    srand(unsigned(time(0)));
 
     std::string input = R"(\(\) hello $ $world \+   \ 0\  NaN (1 2.00 ((())) NULL (0 (1 (2 (3) 2) 1 (2 ) 1 ) 0 ) ) "1 2  3\"" (TIME + 2) for (PI + 1) operator_for(TIME 10))";
     input = R"((operator_/ == operator_/) * 10)";
     input = R"(4 + (1 + 1) * 10)";
-    /*input = "do_something for 3 "
-            "2 ^ 3 "
-            "6 * 7 "
-            "32 / 8 "
-            "23.5 % 23 "
-            "xyz + 123 "
-            "75 - 25 "
-            "2 == 3 "
-            "4 != 4 ";*/
+    input = R"(1+(2>=3*4)-5)";
+    input = R"("a\\\\d\"b\"c" 1+2>4>=5>=0-2"x -   23 "s"e" 1 -d" 123 2 + + 3 s "a\\\\d\"b\"c")";
+    input = R"((1 + 2) * 2)";
     std::cout << "RAW INPUT:\t" << input << "\n";
 
     rekt::Parser parser;

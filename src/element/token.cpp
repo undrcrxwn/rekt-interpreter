@@ -21,10 +21,10 @@ namespace rekt
         return resolved;
     }
 
-    boost::optional<std::shared_ptr<Element>> FunctionToken::Process()
+    std::optional<std::shared_ptr<Element>> FunctionToken::Process()
     {
         auto res = (*processor)(arguments);
-        if (!res) return boost::none;
+        if (!res) return std::nullopt;
         Core::Process(res.value());
         return res;
     }
